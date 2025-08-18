@@ -1,0 +1,247 @@
+////// Simulation of a single population existing in 2-Dimentional space.
+////// Should be able to take input parameters using ....
+
+
+
+
+initialize() { 
+	initializeSLiMModelType("nonWF");  //////// Slim Command to iniitiate NON-WF models
+	initializeSLiMOptions(dimensionality="xy"); //////// Initiate 2 dimmentional space
+	initializeSex(); ////// Initiate Seperation of Biological Sex
+	
+	// This model uses tree-sequence recording, but it is optional
+	initializeTreeSeq();    //////// Initiate tree-sequence recording
+	
+	defaults = Dictionary(
+		"SEED", getSeed(),
+		"SD", 0.5,         // sigma_D, dispersal distance //// Is only used to move new born individuals in "early" //// higher => increased movement
+		"SX", 0.5,         // sigma_X, interaction distance for measuring local density //// Used to create an interaction, which is then used for reducing fitness based on the proximity of other individuals
+		"SM", 0.5,         // sigma_M, mate choice distance //// Used to create an interaction, which is then used to pick a candidate for mating
+		"K", 5,            // carrying capacity per unit area //// Used to calcualte RHO= FECUN / ((1 + FECUN) * K)) //// Used for initial population number of individuals = K * WIDTH * HEIGHT
+		"LIFETIME", 4,     // average life span ////
+		"WIDTH", 20.0,     // width of the simulated area ////
+		"HEIGHT", 20.0,    // height of the simulated area ////
+		"RUNTIME", 1500,    // total number of ticks to run the simulation for ////
+		"REMOVE_BOUNDARIES", 500, // Timeline of Simulation,
+		"MU", 0.00000,            // mutation rate ////
+		"OUTDIR", "C:/Users/rjt939/Desktop/Slim_Spatial_Models/Single_Population_Metrics_Workflow"
+		);	
+	
+	// Set up parameters with a user-defined function
+	setupParams(defaults);
+	
+	// Set up constants that depend on externally defined parameters
+	defineConstant("FECUN", 1 / LIFETIME);
+	defineConstant("RHO", FECUN / ((1 + FECUN) * K));
+	defineConstant("PARAMS", defaults);
+	
+	
+	setSeed(SEED);
+
+	//////// basic neutral genetics
+	//// Initialize Possible Mutations
+	initializeMutationType("m1", 0.5, "f", 0.0); ///standard neutral mutation
+	
+	//// Initialize Possible Genomic Elements
+	initializeGenomicElementType("g1", m1, 1.0); /// Non coding region, only neutral mutations
+	
+	/// Initialize Individual Chromosomes (Haplosomes)
+	
+	/// Create 3 Autosomes	
+	/// Chromosome 1
+
+	initializeChromosome(1, 1e5, type="A", symbol="1"); //// Define number of the chromosome, length, type (A = autosome) and ID
+	initializeGenomicElement(g1, 0, 1e5-1); //// Has only 1 genomic element, a non coding region, that covers it full length. 
+	initializeMutationRate(0); //// Has no mutation rate (because we add mutations later)
+	initializeRecombinationRate(1e-8); //// Recombination rate
+
+	
+   /// Chromosome 2	
+	initializeChromosome(2, 50000, type="A", symbol="2"); //// Define number of the chromosome, length, type (A = autosome) and ID
+	initializeGenomicElement(g1, 0, 49999); //// Has only 1 genomic element, a non coding region, that covers it full length. 
+	initializeMutationRate(0); //// Has no mutation rate (because we add mutations later)
+	initializeRecombinationRate(1e-8); //// Recombination rate
+
+	
+	
+   /// Chromosome 3	
+	initializeChromosome(3, 25000, type="A", symbol="3"); //// Define number of the chromosome, length, type (A = autosome) and ID
+	initializeGenomicElement(g1, 0, 24999); //// Has only 1 genomic element, a non coding region, that covers it full length. 
+	initializeMutationRate(0); //// Has no mutation rate (because we add mutations later)
+	initializeRecombinationRate(1e-8); //// Recombination rate
+
+
+	
+	/// Create Sexual Chromosomes
+	/// X Chromosome
+	initializeChromosome(4, 50000, type="X", symbol="X"); //// Define number of the chromosome, length, type (X = X-like sexual chromosome) and ID
+	initializeGenomicElement(g1, 0, 49999); //// Length
+	initializeMutationRate(0); //// No mutation rate
+	initializeRecombinationRate(1e-8); //// Recomb rate
+
+	/// Y Chromosome
+	initializeChromosome(5, 25000, type="Y", symbol="Y"); //// Define number of the chromosome, length, type (Y = Y-like sexual chromosome) and ID
+	initializeGenomicElement(g1, 0, 24999); //// Has only 1 genomic element
+	initializeMutationRate(0); //// Mutation rate
+	///// No Recombination rate (0 by default)
+	
+	/// Create Mitochondrial Genome
+	
+	initializeChromosome(6, 1656, type="HF", symbol="MT"); //// Define number of the chromosome, length, type (HF = Haploid, inhereted by females) and ID
+	initializeGenomicElement(g1, 0, 1655); //// Tiny, has only 1 genomic element
+	initializeMutationRate(0); //// Mutation rate
+	//// No recombination rate (0 by default)
+	
+	
+	
+	
+	
+	// spatial interaction for local density measurement
+	initializeInteractionType(1, "xy", reciprocal=T, maxDistance=3 * SX); //// Initiate a local interaction using the 3*SX as maximum distance
+	i1.setInteractionFunction("n", 1.0/(2*PI*SX^2), SX); ///// and make it a normal distribution with a mean of 1.0/(2*PI*SX^2)
+	
+	// spatial interaction for mate choice
+	initializeInteractionType(2, "xy", reciprocal=T, maxDistance=3 * SM); //// Initiate a local interaction using the 3*SM as maximum distance
+	i2.setInteractionFunction("n", 1.0/(2*PI*SM^2), SM); ///// and make it a normal distribution with a mean of 1.0/(2*PI*SM^2)
+
+	i2.setConstraints("receiver", sex="F", minAge=1, maxAge=40);
+    i2.setConstraints("exerter", sex="M", minAge=1);
+
+
+
+}
+
+1 first() {
+	
+	/// Set up pop1
+	sim.addSubpop("p1", asInteger(500));  ////// add Initial population 
+	p1.setSpatialBounds(c(0, 0, 9, 9));   /////// Add spatial bounds for population 1
+	p1.individuals.setSpatialPosition(p1.pointUniform(p1.individualCount));  ///// Place Individuals from pop1 into spatial boundaries of population 1
+	
+	//////
+	log = community.createLogFile(OUTDIR + "sim_log.txt", logInterval=1000);
+	log.addCycle();
+	///// log.addCustomColumn("FST", "calcFST(p1.haplosomes, p2.haplosomes);");
+
+
+}
+
+
+REMOVE_BOUNDARIES first() {
+	p1.setSpatialBounds(c(0, 0, 20, 20)); //// min_width,min_height,max_width,max_height
+}
+
+
+first() {
+	// preparation for the reproduction() callback
+	i2.evaluate(p1);
+}
+
+
+reproduction() { ///// Works for both populations
+	
+	mate = i2.drawByStrength(individual, 1);
+	
+	///// Once Boundaries are off, give option for other population
+	GEN=sim.cycle;
+	
+	if (mate.size()){
+		subpop.addCrossed(individual, mate, count=rpois(1, 2.5*FECUN));	
+	}
+	
+	
+	
+}
+
+
+
+/////////////////////////////////////////////
+//////////// DISPERSAL AND SURVIVAL ////////
+
+early() {
+	///////////////////////
+	//// Disperse offspring
+	offspring_p1 = p1.subsetIndividuals(maxAge=0);
+	
+	p1.deviatePositions(offspring_p1, "stopping", 1, "n", SD); /////// population_name.deviatePositions(vector_of_individuals, what_happens_at_boundaries ,cutoff_to_zero_at_specific_distance (max distnace?) ,normal_distribution ,mean of distribution)
+	
+	
+	
+	
+	///////////////////////////////////////////////////////////
+	// Measure local density and use it for density regulation
+	i1.evaluate(p1);
+	
+	inds_p1 = p1.individuals;
+
+	
+	
+	competition_p1 = i1.localPopulationDensity(inds_p1);
+	
+	GEN=sim.cycle;
+
+	
+	
+	
+	
+	
+	inds_p1.fitnessScaling = pmin(0.95,(1 / (1 + RHO * competition_p1)));
+	
+	
+}
+
+
+
+
+
+//////////////////////////////
+//////////// END OF SIMULATION
+
+late() {
+	if (p1.individualCount == 0) {
+		catn("Population went extinct! Ending the simulation.");
+		sim.simulationFinished();
+	}
+}
+
+RUNTIME late() {
+	catn("End of simulation (run time reached)");
+	sim.treeSeqOutput(OUTDIR + "Spatial_Simulations_SLim_"  + SEED + ".trees",overwriteDirectory = T); //// Output Tree Sequences into predefined output file
+	
+	sim.outputFull(OUTDIR + "Spatial_Simulations_SLim_"  + SEED + ".output_full"); //// Output Full information on the simulation
+	
+	inds = c(p1.individuals); //// Prepare and output a VCF file
+	inds.outputIndividualsToVCF(OUTDIR + "Spatial_Simulations_SLim_"  + SEED + ".vcf");
+	
+	sim.simulationFinished();
+	
+}
+
+
+
+
+
+
+/////////////////////////
+//////////// OUTPUT STUFF
+function (void)setupParams(object<Dictionary>$ defaults)
+{
+	if (!exists("PARAMFILE")) defineConstant("PARAMFILE", "./params.json");
+	
+	if (fileExists(PARAMFILE)) {
+		defaults.addKeysAndValuesFrom(Dictionary(readFile(PARAMFILE)));
+		defaults.setValue("READ_FROM_PARAMFILE", PARAMFILE);
+	}
+
+	for (k in defaults.allKeys) {
+		if (!exists(k))
+			defineConstant(k, defaults.getValue(k));
+		else
+			defaults.setValue(k, executeLambda(k + ";"));
+	}
+	
+	// print out default values
+	catn("===========================");
+	catn("Model constants: " + defaults.serialize("pretty"));
+	catn("===========================");
+}
