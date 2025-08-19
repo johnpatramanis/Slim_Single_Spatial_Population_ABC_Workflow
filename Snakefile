@@ -119,7 +119,8 @@ for X,Y in Parameters.items(): #### Cycle through parameters
 ################################# Rules For Snakemake
 rule all:
     input:
-        expand('Simulation_Runs/{sample}/params.json',sample=Simulations)
+        expand('Simulation_Runs/{sample}/params.json',sample=Simulations),
+        expand('Simulation_Runs/{sample}/sim_log.txt',sample=Simulations),
 
 
 
@@ -176,7 +177,8 @@ rule Create_Folder_For_Each_Simulation:
 ##
 rule Run_Slim_Simulations:
     input:
-        "Input_Parameters.txt"
+        'Simulation_Runs/{sample}/params.json'
     output:
-        expand('Simulation_Runs/{sample}/params.json',sample=Simulations)
+        'Simulation_Runs/{sample}/sim_log.txt'
     run:
+        shell(F"cd Simulation_Runs/{wildcards.sample}/; slim Slim_Script.slim; cd ../..;")
