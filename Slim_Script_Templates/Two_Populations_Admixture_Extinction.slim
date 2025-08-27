@@ -128,6 +128,8 @@ initialize() {
 	p2.setSpatialBounds(c(11, 11, 20, 20));   /////// Add spatial bounds for population 1
 	p2.individuals.setSpatialPosition(p2.pointUniform(p2.individualCount));  ///// Place Individuals from pop1 
 
+	//////
+	sim.treeSeqRememberIndividuals(sim.subpopulations.individuals); //// Remember first generation of individuals in simulation
 
 	//////
 	log = community.createLogFile(OUTDIR + "sim_log.txt", logInterval=1000);

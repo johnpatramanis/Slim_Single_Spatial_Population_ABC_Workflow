@@ -21,8 +21,9 @@ initialize() {
 		"LIFETIME", 4,     // average life span ////
 		"WIDTH", 20.0,     // width of the simulated area ////
 		"HEIGHT", 20.0,    // height of the simulated area ////
-		"RUNTIME", 1500,    // total number of ticks to run the simulation for ////
-		"REMOVE_BOUNDARIES", 500, // Timeline of Simulation,
+		"RUNTIME", 5000,    // total number of ticks to run the simulation for ////
+		"REMOVE_BOUNDARIES", 1500, // Timeline of Simulation,
+		"RETURN_BOUNDARIES", 2000, // Timeline of Simulation,
 		"MU", 0.00000,            // mutation rate ////
 		"OUTDIR", "C:/Users/rjt939/Desktop/Slim_Spatial_Models/Single_Population_Metrics_Workflow"
 		);	
@@ -47,51 +48,58 @@ initialize() {
 	
 	/// Initialize Individual Chromosomes (Haplosomes)
 	
-	/// Create 3 Autosomes	
+	/// Create 10 Autosomes, with the same exact architecture
 	/// Chromosome 1
 
-	initializeChromosome(1, 1e5, type="A", symbol="1"); //// Define number of the chromosome, length, type (A = autosome) and ID
-	initializeGenomicElement(g1, 0, 1e5-1); //// Has only 1 genomic element, a non coding region, that covers it full length. 
+	initializeChromosome(1, 1e6 , type="A", symbol="1"); //// Define number of the chromosome, length, type (A = autosome) and ID
+	initializeGenomicElement(g1, 0, 1e6-1); //// Has only 1 genomic element, a non coding region, that covers it full length. 
 	initializeMutationRate(0); //// Has no mutation rate (because we add mutations later)
 	initializeRecombinationRate(1e-8); //// Recombination rate
 
+	initializeChromosome(2, 1e6 , type="A", symbol="2"); //// Define number of the chromosome, length, type (A = autosome) and ID
+	initializeGenomicElement(g1, 0, 1e6-1); //// Has only 1 genomic element, a non coding region, that covers it full length. 
+	initializeMutationRate(0); //// Has no mutation rate (because we add mutations later)
+	initializeRecombinationRate(1e-8); //// Recombination rate
 	
-   /// Chromosome 2	
-	initializeChromosome(2, 50000, type="A", symbol="2"); //// Define number of the chromosome, length, type (A = autosome) and ID
-	initializeGenomicElement(g1, 0, 49999); //// Has only 1 genomic element, a non coding region, that covers it full length. 
+	initializeChromosome(3, 1e6 , type="A", symbol="3"); //// Define number of the chromosome, length, type (A = autosome) and ID
+	initializeGenomicElement(g1, 0, 1e6-1); //// Has only 1 genomic element, a non coding region, that covers it full length. 
 	initializeMutationRate(0); //// Has no mutation rate (because we add mutations later)
 	initializeRecombinationRate(1e-8); //// Recombination rate
 
-	
-	
-   /// Chromosome 3	
-	initializeChromosome(3, 25000, type="A", symbol="3"); //// Define number of the chromosome, length, type (A = autosome) and ID
-	initializeGenomicElement(g1, 0, 24999); //// Has only 1 genomic element, a non coding region, that covers it full length. 
+	initializeChromosome(4, 1e6 , type="A", symbol="4"); //// Define number of the chromosome, length, type (A = autosome) and ID
+	initializeGenomicElement(g1, 0, 1e6-1); //// Has only 1 genomic element, a non coding region, that covers it full length. 
 	initializeMutationRate(0); //// Has no mutation rate (because we add mutations later)
 	initializeRecombinationRate(1e-8); //// Recombination rate
 
+	initializeChromosome(5, 1e6 , type="A", symbol="5"); //// Define number of the chromosome, length, type (A = autosome) and ID
+	initializeGenomicElement(g1, 0, 1e6-1); //// Has only 1 genomic element, a non coding region, that covers it full length. 
+	initializeMutationRate(0); //// Has no mutation rate (because we add mutations later)
+	initializeRecombinationRate(1e-8); //// Recombination rate
 
-	
-	/// Create Sexual Chromosomes
-	/// X Chromosome
-	initializeChromosome(4, 50000, type="X", symbol="X"); //// Define number of the chromosome, length, type (X = X-like sexual chromosome) and ID
-	initializeGenomicElement(g1, 0, 49999); //// Length
-	initializeMutationRate(0); //// No mutation rate
-	initializeRecombinationRate(1e-8); //// Recomb rate
+	initializeChromosome(6, 1e6 , type="A", symbol="6"); //// Define number of the chromosome, length, type (A = autosome) and ID
+	initializeGenomicElement(g1, 0, 1e6-1); //// Has only 1 genomic element, a non coding region, that covers it full length. 
+	initializeMutationRate(0); //// Has no mutation rate (because we add mutations later)
+	initializeRecombinationRate(1e-8); //// Recombination rate
 
-	/// Y Chromosome
-	initializeChromosome(5, 25000, type="Y", symbol="Y"); //// Define number of the chromosome, length, type (Y = Y-like sexual chromosome) and ID
-	initializeGenomicElement(g1, 0, 24999); //// Has only 1 genomic element
-	initializeMutationRate(0); //// Mutation rate
-	///// No Recombination rate (0 by default)
-	
-	/// Create Mitochondrial Genome
-	
-	initializeChromosome(6, 1656, type="HF", symbol="MT"); //// Define number of the chromosome, length, type (HF = Haploid, inhereted by females) and ID
-	initializeGenomicElement(g1, 0, 1655); //// Tiny, has only 1 genomic element
-	initializeMutationRate(0); //// Mutation rate
-	//// No recombination rate (0 by default)
-	
+	initializeChromosome(7, 1e6 , type="A", symbol="7"); //// Define number of the chromosome, length, type (A = autosome) and ID
+	initializeGenomicElement(g1, 0, 1e6-1); //// Has only 1 genomic element, a non coding region, that covers it full length. 
+	initializeMutationRate(0); //// Has no mutation rate (because we add mutations later)
+	initializeRecombinationRate(1e-8); //// Recombination rate
+
+	initializeChromosome(8, 1e6 , type="A", symbol="8"); //// Define number of the chromosome, length, type (A = autosome) and ID
+	initializeGenomicElement(g1, 0, 1e6-1); //// Has only 1 genomic element, a non coding region, that covers it full length. 
+	initializeMutationRate(0); //// Has no mutation rate (because we add mutations later)
+	initializeRecombinationRate(1e-8); //// Recombination rate
+
+	initializeChromosome(9, 1e6 , type="A", symbol="9"); //// Define number of the chromosome, length, type (A = autosome) and ID
+	initializeGenomicElement(g1, 0, 1e6-1); //// Has only 1 genomic element, a non coding region, that covers it full length. 
+	initializeMutationRate(0); //// Has no mutation rate (because we add mutations later)
+	initializeRecombinationRate(1e-8); //// Recombination rate
+
+	initializeChromosome(10, 1e6 , type="A", symbol="10"); //// Define number of the chromosome, length, type (A = autosome) and ID
+	initializeGenomicElement(g1, 0, 1e6-1); //// Has only 1 genomic element, a non coding region, that covers it full length. 
+	initializeMutationRate(0); //// Has no mutation rate (because we add mutations later)
+	initializeRecombinationRate(1e-8); //// Recombination rate	
 	
 	
 	
@@ -107,6 +115,9 @@ initialize() {
 	i2.setConstraints("receiver", sex="F", minAge=1, maxAge=40);
     i2.setConstraints("exerter", sex="M", minAge=1);
 
+	// spatial interaction for local density measurement
+	initializeInteractionType(3, "xy", reciprocal=T, maxDistance=3 * SX); //// Initiate a local interaction using the 3*SX as maximum distance
+	i3.setInteractionFunction("n", 1.0/(2*PI*SX^2), SX); ///// and make it a normal distribution with a mean of 1.0/(2*PI*SX^2)
 
 
 }
@@ -118,6 +129,15 @@ initialize() {
 	p1.setSpatialBounds(c(0, 0, 9, 9));   /////// Add spatial bounds for population 1
 	p1.individuals.setSpatialPosition(p1.pointUniform(p1.individualCount));  ///// Place Individuals from pop1 into spatial boundaries of population 1
 	
+		
+	/// Set up pop2
+	sim.addSubpop("p2", asInteger(500));  ////// add Initial population 
+	p2.setSpatialBounds(c(11, 11, 20, 20));   /////// Add spatial bounds for population 1
+	p2.individuals.setSpatialPosition(p2.pointUniform(p2.individualCount));  ///// Place Individuals from pop1 
+
+	//////
+	sim.treeSeqRememberIndividuals(sim.subpopulations.individuals); //// Remember first generation of individuals in simulation
+
 	//////
 	log = community.createLogFile(OUTDIR + "sim_log.txt", logInterval=1000);
 	log.addCycle();
@@ -129,12 +149,18 @@ initialize() {
 
 REMOVE_BOUNDARIES first() {
 	p1.setSpatialBounds(c(0, 0, 20, 20)); //// min_width,min_height,max_width,max_height
+	p2.setSpatialBounds(c(0, 0, 20, 20)); //// min_width,min_height,max_width,max_height
 }
 
+RETURN_BOUNDARIES first(){
+sim.killIndividuals(p2.individuals);
+p2.setSpatialBounds(c(15, 15, 20, 20));	
+}
 
 first() {
 	// preparation for the reproduction() callback
 	i2.evaluate(p1);
+	i2.evaluate(p2);
 }
 
 
@@ -142,14 +168,23 @@ reproduction() { ///// Works for both populations
 	
 	mate = i2.drawByStrength(individual, 1);
 	
+	
 	///// Once Boundaries are off, give option for other population
 	GEN=sim.cycle;
+	if (GEN>REMOVE_BOUNDARIES & GEN<RETURN_BOUNDARIES){
+	
+		mate1 = i2.drawByStrength(individual, 1, p1); /// Draw a good candidate from pop 1
+		mate2 = i2.drawByStrength(individual, 1, p2); /// Draw a good candidate from pop 2
+		possible_mates=c(mate1,mate2); /// Combine them into a list
+	
+		if (possible_mates.size()){
+			mate = sample(possible_mates,1); /// If list not empty, pick randomly
+		}
+	}	
 	
 	if (mate.size()){
-		subpop.addCrossed(individual, mate, count=rpois(1, 2.5*FECUN));	
+		subpop.addCrossed(individual, mate, count=rpois(1, 3*FECUN));	
 	}
-	
-	
 	
 }
 
@@ -162,31 +197,46 @@ early() {
 	///////////////////////
 	//// Disperse offspring
 	offspring_p1 = p1.subsetIndividuals(maxAge=0);
+	offspring_p2 = p2.subsetIndividuals(maxAge=0);
 	
 	p1.deviatePositions(offspring_p1, "stopping", 1, "n", SD); /////// population_name.deviatePositions(vector_of_individuals, what_happens_at_boundaries ,cutoff_to_zero_at_specific_distance (max distnace?) ,normal_distribution ,mean of distribution)
-	
+	p2.deviatePositions(offspring_p2, "stopping", 1, "n", SD);
 	
 	
 	
 	///////////////////////////////////////////////////////////
 	// Measure local density and use it for density regulation
 	i1.evaluate(p1);
+	i3.evaluate(p2);
 	
 	inds_p1 = p1.individuals;
-
+	inds_p2 = p2.individuals;
 	
 	
 	competition_p1 = i1.localPopulationDensity(inds_p1);
+	competition_p2 = i3.localPopulationDensity(inds_p2);
 	
+ ///// After barier goes down
 	GEN=sim.cycle;
-
+	if (GEN>REMOVE_BOUNDARIES & GEN<RETURN_BOUNDARIES){
 	
+	i3.evaluate(p1);
+	i1.evaluate(p2);
+	
+	competition_p1 = competition_p1 + i3.localPopulationDensity(inds_p1);
+	competition_p2 = competition_p2 + i1.localPopulationDensity(inds_p2);
+
+	}
+	
+	
+
 	
 	
 	
 	
 	inds_p1.fitnessScaling = pmin(0.95,(1 / (1 + RHO * competition_p1)));
-	
+	inds_p2.fitnessScaling = pmin(0.95,(1 / (1 + RHO * competition_p2)));
+
 	
 }
 
@@ -206,7 +256,7 @@ late() {
 
 RUNTIME late() {
 	catn("End of simulation (run time reached)");
-	sim.treeSeqOutput(OUTDIR + "Spatial_Simulations_SLim_trees",overwriteDirectory = T); //// Output Tree Sequences into predefined output file
+	sim.treeSeqOutput(OUTDIR + "Spatial_Simulations_SLim.trees",overwriteDirectory = T); //// Output Tree Sequences into predefined output file
 	
 	sim.outputFull(OUTDIR + "Spatial_Simulations_SLim.output_full"); //// Output Full information on the simulation
 	
