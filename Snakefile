@@ -1,3 +1,6 @@
+##### For conda env: conda install conda-forge::msprime conda-forge::gsl conda-forge::tskit conda-forge::pyslim bioconda::snakemake conda-forge::numpy
+
+
 import numpy as np
 import os, shutil
 import os.path
@@ -119,8 +122,10 @@ for X,Y in Parameters.items(): #### Cycle through parameters
 ################################# Rules For Snakemake
 rule all:
     input:
-        expand('Simulation_Runs/{sample}/params.json',sample=Simulations),
-        expand('Simulation_Runs/{sample}/sim_log.txt',sample=Simulations),
+        expand('Simulation_Runs/{sample}/params.json', sample = Simulations),
+        expand('Simulation_Runs/{sample}/sim_log.txt', sample = Simulations),
+        expand('Simulation_Runs/{sample}/Check_Files/Ancestry_Assigned', sample = Simulations),
+        expand('Simulation_Runs/{sample}/Check_Files/Tracks_Calculated', sample = Simulations),
 
 
 
@@ -145,7 +150,7 @@ rule Create_Folder_For_Each_Simulation:
             
             os.makedirs(F"Simulation_Runs/{Folder_Name}") ### Create folder for simulation
             
-                
+            os.makedirs(F"Simulation_Runs/{Folder_Name}/Check_Files") ### Create folder to place checkfiles, for specific steps    
             
             shell(F"""cp Slim_Script.slim Simulation_Runs/{Folder_Name}/Slim_Script.slim;""") ### Add a copy of slim script into folder
             
@@ -182,3 +187,55 @@ rule Run_Slim_Simulations:
         'Simulation_Runs/{sample}/sim_log.txt'
     run:
         shell(F"cd Simulation_Runs/{wildcards.sample}/; slim Slim_Script.slim; cd ../..;")
+        
+        
+        
+
+######## Rule to Assign Ancestry to each individual from each chromosome
+##
+rule Assign_Population_Ancestry:
+    input:
+        'Simulation_Runs/{sample}/sim_log.txt'
+    output:
+        'Simulation_Runs/{sample}/Check_Files/Ancestry_Assigned'
+    run:
+        shell(F"python3 ./Python_Scripts/Find_Admixture_and_Assign_Trees_to_Pop.py ./Simulation_Runs/{wildcards.sample}/") ### Python script to generate ancestry files
+        
+        
+        if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/Ancestries")) == True): ### Check if folder exists delete if it does
+            shutil.rmtree(F"Simulation_Runs/{wildcards.sample}/Ancestries")
+            
+        os.makedirs(F"Simulation_Runs/{wildcards.sample}/Ancestries") ### Create folder for simulation
+        
+        shell(F"mv Simulation_Runs/{wildcards.sample}/*.anc Simulation_Runs/{wildcards.sample}/Ancestries/")
+      
+        
+        
+        
+        shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Ancestry_Assigned")
+
+
+
+
+
+
+######## Rule to Calculate overall length of tracks for each ancestry, for each haplotype
+##
+rule Calculate_Overall_Track_Length:
+    input:
+        'Simulation_Runs/{sample}/Check_Files/Ancestry_Assigned'
+    output:
+        'Simulation_Runs/{sample}/Check_Files/Tracks_Calculated'
+    run:
+        
+        #### Make sure file exist and is new
+        if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/Tracks")) == True): ### Check if folder exists delete if it does
+            shutil.rmtree(F"Simulation_Runs/{wildcards.sample}/Tracks")
+            
+        os.makedirs(F"Simulation_Runs/{wildcards.sample}/Tracks") ### Create folder for simulation
+        
+        #### Python script to calculate total track length for each ancestry and each haplotype
+        shell(F"python3 ./Python_Scripts/Count_Total_Ancenstry_For_Chromosome.py ./Simulation_Runs/{wildcards.sample}/Ancestries ./Simulation_Runs/{wildcards.sample}/Tracks") ### Python script to generate ancestry files
+      
+        #### Checkfile
+        shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Tracks_Calculated")
