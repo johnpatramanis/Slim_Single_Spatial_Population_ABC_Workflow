@@ -152,6 +152,26 @@ for X in range(0,len(All_Individuals)):
             
             Total_Ancestry[ANC].append(This_Ancestry_This_Individual)
     
-    print(Hap_ID,Total_Ancestry)
+    ### Sum every ancestry across chromosomes
+    for ANC in Number_of_Maximum_Ancestries_Between_Chromosomes:
+        Total_Ancestry[ANC] = sum(Total_Ancestry[ANC])
+    ### Assign it to individual
+    Every_Individual_Genome_Wide_Ancestry[Hap_ID] = Total_Ancestry
+
+print(Every_Individual_Genome_Wide_Ancestry)
+ 
+##### Output it
+Output_File.write(F"Genome_Wide_Ancestries:")
+for ancestry in Number_of_Maximum_Ancestries_Between_Chromosomes:
+    Output_File.write(ancestry)
+    Output_File.write(',')
+Output_File.write("\n")
+
     
-    # Every_Individual_Genome_Wide_Ancestry[Hap_ID] = Total_Ancestry
+for X in range(0,len(All_Individuals)):
+    Output_File.write(All_Individuals_ID[X] + ":")
+    Hap_ID = All_Individuals_ID[X].split("_")[1]
+    
+    for ancestry in Number_of_Maximum_Ancestries_Between_Chromosomes:
+        Output_File.write( str( Every_Individual_Genome_Wide_Ancestry[Hap_ID][ancestry] ) + "," )
+    Output_File.write("\n")
