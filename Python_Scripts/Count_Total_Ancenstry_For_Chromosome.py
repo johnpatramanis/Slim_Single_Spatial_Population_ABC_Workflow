@@ -8,6 +8,11 @@ import os
 Folder = sys.argv[1]
 Output_Folder = sys.argv[2]
 
+Chromosome_to_Haplotypes = {}
+Chromosomes = []
+
+Number_of_Maximum_Ancestries_Between_Chromosomes = []
+
 for File in os.listdir(F"{Folder}"):
     
     Chromosome = File.split(".")[0]
@@ -36,14 +41,18 @@ for File in os.listdir(F"{Folder}"):
         All_Individuals.append(Ancestry_Individual)
         All_Individuals_ID.append(ID_of_Individual)
 
-    ### Find out how many ancestries exist in total 
+    ### Find out how many ancestries exist in total in this chromosome
     Ancestries = []
 
     for Ind in All_Individuals:
         for ancestry in Ind:
             if ancestry not in Ancestries:
                 Ancestries.append(ancestry)
-
+                #### keep track of maximum number of possible ancestries (could differ between chromosomes)
+                Number_of_Maximum_Ancestries_Between_Chromosomes.append(ancestry)
+    
+    
+    
 
 
     ### Get Percentage of each ancestry for each individual
@@ -80,7 +89,69 @@ for File in os.listdir(F"{Folder}"):
 
     #### Write out Percentage of each ancestry for each individual
     for X in range(0,len(All_Individuals)):
-        Output_File.write(ID_of_Individual + ":")
+        Output_File.write(All_Individuals_ID[X] + ":")
         for ancestry in sorted(Ancestries):
             Output_File.write(str(All_Individuals_Percentage[X][ancestry]) + ",")
         Output_File.write("\n")
+
+
+    #### Log perentage of each ancestry for each individual for this chromosome
+    ## Add them to a dicitonary of chromosomes. Each entry contains a dictionary of individuasl 
+    Chromosome_to_Haplotypes[Chromosome] = {}
+    Chromosomes.append(Chromosome)
+    for X in range(0,len(All_Individuals)):
+        This_Ind_This_Chrom = {}
+        
+        for ancestry in sorted(Ancestries):
+                    
+            This_Ind_This_Chrom[ancestry] = All_Individuals_Percentage[X][ancestry]
+
+            This_Individual = All_Individuals_ID[X].split("_")[1]
+            Chromosome_to_Haplotypes[Chromosome][This_Individual] = This_Ind_This_Chrom
+            
+
+
+
+
+
+
+
+
+
+###########################################
+### Genome-Wide Ancestry
+
+
+###### Overall genome for each haplo-individual
+### Print out in new file
+Output_File = open(F"{Output_Folder}/Whole_Genome.total_tracks",'w')
+
+Number_of_Maximum_Ancestries_Between_Chromosomes = sorted(list(set(Number_of_Maximum_Ancestries_Between_Chromosomes)))
+Every_Individual_Genome_Wide_Ancestry = {}
+
+#### Cycle through each individual
+for X in range(0,len(All_Individuals)):   
+    
+    Hap_ID = All_Individuals_ID[X].split("_")[1] ## ind ID
+    ## Create Empty Ancestry matrix
+    Total_Ancestry = {}
+    for x in Number_of_Maximum_Ancestries_Between_Chromosomes: 
+        Total_Ancestry[x] = []
+    #### Cycle through Chromosomes
+    for CHR in Chromosomes:
+        Ancestries_Here = Chromosome_to_Haplotypes[CHR][Hap_ID]
+        
+        #### Cycle through possible ancestries  
+        for ANC in Number_of_Maximum_Ancestries_Between_Chromosomes:
+            
+            if ANC in Ancestries_Here.keys():
+                This_Ancestry_This_Individual = Ancestries_Here[ANC]
+                
+            else:
+                This_Ancestry_This_Individual = 0
+            
+            Total_Ancestry[ANC].append(This_Ancestry_This_Individual)
+    
+    print(Hap_ID,Total_Ancestry)
+    
+    # Every_Individual_Genome_Wide_Ancestry[Hap_ID] = Total_Ancestry
