@@ -35,11 +35,11 @@ for File in os.listdir(F"{Folder}"):
     for line in File:
         
         Ancestry_Individual = line.strip().split(":")[1]
-        ID_of_Individual = line.strip().split(":")[0]
-        Ancestry_Individual = Ancestry_Individual.split(",")
-        
-        All_Individuals.append(Ancestry_Individual)
-        All_Individuals_ID.append(ID_of_Individual)
+        if Ancestry_Individual != '':
+            ID_of_Individual = line.strip().split(":")[0]
+            Ancestry_Individual = Ancestry_Individual.split(",")
+            All_Individuals.append(Ancestry_Individual)
+            All_Individuals_ID.append(ID_of_Individual)
 
     ### Find out how many ancestries exist in total in this chromosome
     Ancestries = []
