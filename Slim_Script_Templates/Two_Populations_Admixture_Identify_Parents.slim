@@ -6,7 +6,7 @@
 
 initialize() { 
 	initializeSLiMModelType("nonWF");  //////// Slim Command to iniitiate NON-WF models
-	initializeSLiMOptions(dimensionality="xy"); //////// Initiate 2 dimmentional space
+	initializeSLiMOptions(keepPedigrees=T,dimensionality="xy"); //////// Initiate 2 dimmentional space
 	initializeSex(); ////// Initiate Seperation of Biological Sex
 	
 	// This model uses tree-sequence recording, but it is optional
@@ -21,13 +21,10 @@ initialize() {
 		"LIFETIME", 4,     // average life span ////
 		"WIDTH", 20.0,     // width of the simulated area ////
 		"HEIGHT", 20.0,    // height of the simulated area ////
-		"REMOVE_BOUNDARIES", 1500, // Timeline of Simulation,
-		"RETURN_BOUNDARIES", 2000, // Timeline of Simulation,
-		"RUNTIME", 3500,    // total number of ticks to run the simulation for ////
-		"MU", 0.00000,            // mutation rate ////
-		"OUTDIR", "C:/Users/rjt939/Desktop/Slim_Spatial_Models/Single_Population_Metrics_Workflow"
-		);	
-	
+		"RUNTIME", 1500,    // total number of ticks to run the simulation for ////
+		"REMOVE_BOUNDARIES", 500, // Timeline of Simulation,
+		"MU", 0.00000            // mutation rate ///);	
+	);
 	// Set up parameters with a user-defined function
 	setupParams(defaults);
 	
@@ -130,12 +127,7 @@ initialize() {
 
 	//////
 	sim.treeSeqRememberIndividuals(sim.subpopulations.individuals); //// Remember first generation of individuals in simulation
-
 	//////
-	log = community.createLogFile(OUTDIR + "sim_log.txt", logInterval=1000);
-	log.addCycle();
-	///// log.addCustomColumn("FST", "calcFST(p1.haplosomes, p2.haplosomes);");
-
 
 }
 
@@ -145,10 +137,6 @@ REMOVE_BOUNDARIES first() {
 	p2.setSpatialBounds(c(0, 0, 20, 20)); //// min_width,min_height,max_width,max_height
 }
 
-RETURN_BOUNDARIES first(){
-sim.killIndividuals(p2.individuals);
-p2.setSpatialBounds(c(15, 15, 20, 20));	
-}
 
 first() {
 	// preparation for the reproduction() callback
@@ -164,7 +152,7 @@ reproduction() { ///// Works for both populations
 	
 	///// Once Boundaries are off, give option for other population
 	GEN=sim.cycle;
-	if (GEN>REMOVE_BOUNDARIES & GEN<RETURN_BOUNDARIES){
+	if (GEN>REMOVE_BOUNDARIES){
 	
 		mate1 = i2.drawByStrength(individual, 1, p1); /// Draw a good candidate from pop 1
 		mate2 = i2.drawByStrength(individual, 1, p2); /// Draw a good candidate from pop 2
@@ -172,10 +160,12 @@ reproduction() { ///// Works for both populations
 	
 		if (possible_mates.size()){
 			mate = sample(possible_mates,1); /// If list not empty, pick randomly
+			print(mate.subpopulation);
 		}
 	}	
 	
 	if (mate.size()){
+		//// print(c(individual.subpopulation,mate.subpopulation));
 		subpop.addCrossed(individual, mate, count=rpois(1, 3*FECUN));	
 	}
 	
@@ -211,7 +201,7 @@ early() {
 	
  ///// After barier goes down
 	GEN=sim.cycle;
-	if (GEN>REMOVE_BOUNDARIES & GEN<RETURN_BOUNDARIES){
+	if (GEN>REMOVE_BOUNDARIES){
 	
 	i3.evaluate(p1);
 	i1.evaluate(p2);
@@ -242,23 +232,15 @@ early() {
 
 late() {
 	if (p1.individualCount == 0) {
-		
 		catn("Population went extinct! Ending the simulation.");
-		GEN=sim.cycle;
-		writeFile(OUTDIR + "Slim_Simulation_Failed_To_Finish", GEN );
 		sim.simulationFinished();
-		
 	}
 }
 
 RUNTIME late() {
 	catn("End of simulation (run time reached)");
-	sim.treeSeqOutput(OUTDIR + "Spatial_Simulations_SLim_"  + SEED + ".trees",overwriteDirectory = T); //// Output Tree Sequences into predefined output file
 	
-	sim.outputFull(OUTDIR + "Spatial_Simulations_SLim_"  + SEED + ".output_full"); //// Output Full information on the simulation
 	
-	inds = c(p1.individuals); //// Prepare and output a VCF file
-	inds.outputIndividualsToVCF(OUTDIR + "Spatial_Simulations_SLim_"  + SEED + ".vcf");
 	
 	sim.simulationFinished();
 	
