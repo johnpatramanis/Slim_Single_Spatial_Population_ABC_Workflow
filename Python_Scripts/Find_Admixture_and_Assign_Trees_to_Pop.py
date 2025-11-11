@@ -1,5 +1,5 @@
 ##### For conda env: conda install conda-forge::msprime conda-forge::gsl conda-forge::tskit conda-forge::pyslim
-##### How to Run: Find_Admixture_and_Assign_Trees_to_Pop.py ..//Simulation_Runs/Simulation_1/
+##### How to Run: python Python_Scripts/Find_Admixture_and_Assign_Trees_to_Pop.py ./Simulation_Runs/Simulation_0/
 import random
 import msprime
 import pyslim
@@ -118,4 +118,24 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
     for Ind_Ancestry in range(0,len(Last_Gen_Ancestry_Matrix)):
         Chromosome_Ancestry_Output.write(F"Individual_{Last_Gen_SubSample[Ind_Ancestry].individual}_Haplotype_{Last_Gen_SubSample[Ind_Ancestry].id}:")
         Chromosome_Ancestry_Output.write(",".join(Last_Gen_Ancestry_Matrix[Ind_Ancestry]) + "\n")
-        
+    
+    
+    
+    
+##### Output a list of individuals that were sampled, including some information on them from Slim
+Sampled_Individuals_Output = open(F'{Folder}/Sampled_Individuals.txt','w')   
+Sampled_Individuals_Output.write('Slim_ID\tLocation\tAge\tSex\tPopulation_ID\tPedigree_ID\tParent1_Pedigree_ID\tParent2_Pedigree_ID\n')
+
+for SInd in Sampled_Individuals_Last_Gen:
+    Slim_ID = ts.individual(SInd)
+    ID = Slim_ID.id
+    Location = '-'.join([str(x) for x in Slim_ID.location])
+    MTDATA = Slim_ID.metadata
+    pedigree_id = MTDATA['pedigree_id']
+    parent1_id = MTDATA['pedigree_p1']
+    parent2_id = MTDATA['pedigree_p2']
+    Age = MTDATA['age']
+    Population_Label = MTDATA['subpopulation']
+    Sex = MTDATA['sex']
+    
+    Sampled_Individuals_Output.write(F'{ID}\t{Location}\t{Age}\t{Sex}\t{Population_Label}\t{pedigree_id}\t{parent1_id}\t{parent2_id}\n')

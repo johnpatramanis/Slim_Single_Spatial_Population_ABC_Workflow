@@ -1,5 +1,5 @@
 ##### Takes input of "Find_Admixture.py"
-##### Run like this """ python Assemble_Haplotypes_and_Count_Ancestry_For_Chromosome.py ./Simulation_Runs/Simulation_0/Ancestries ./Simulation_Runs/Simulation_0/Haplotypes """
+##### Run like this """python Assemble_Haplotypes_and_Count_Ancestry_For_Chromosome.py ./Simulation_Runs/Simulation_0/Ancestries ./Simulation_Runs/Simulation_0/Haplotypes """
 import sys
 import os
 
@@ -142,21 +142,19 @@ for File in os.listdir(F"{Folder}"):
         Output_File.write("--".join(Haplotypes_for_Output))
         Output_File.write("\n")
     
-    #### Also store them for Genomewide haplotypes
-        Haplotypes_for_Output = []
+        #### Also store them for Genomewide haplotypes
+        Haplotypes_for_Output = [ str(Chromosome) + ',' + x for x in Haplotypes_for_Output]
+        ### For calculating ancestries in the end
         for k in Haplotypes_Of_This_Ind:
             Possible_Ancestries.append(k[0])
-            JOINED = str(Chromosome) + ',' + ','.join([str(f) for f in k])
-            Haplotypes_for_Output.append(JOINED)
             
-            if All_Individuals_ID[X] not in Haplotypes_Genomewide_per_Indibidual.keys():
-                Haplotypes_Genomewide_per_Indibidual[All_Individuals_ID[X]] = ["--".join(Haplotypes_for_Output)]
-            else:
-                Haplotypes_Genomewide_per_Indibidual[All_Individuals_ID[X]].append("--".join(Haplotypes_for_Output))
-                
-                
-for J,K in Haplotypes_Genomewide_per_Indibidual.items():
-    Haplotypes_Genomewide_per_Indibidual[J] = sorted(K)
+        ##### Add to global dictionary
+        ##### Check if individual is global dict
+        if All_Individuals_ID[X] not in Haplotypes_Genomewide_per_Indibidual.keys():
+            Haplotypes_Genomewide_per_Indibidual[All_Individuals_ID[X]] = ["--".join(Haplotypes_for_Output)]
+        else:
+            Haplotypes_Genomewide_per_Indibidual[All_Individuals_ID[X]].append("--".join(Haplotypes_for_Output))
+
 
 ###### Genomewide Output
 ## Prep file
@@ -169,8 +167,7 @@ for ancestry in sorted(Possible_Ancestries):
 Output_File.write("\n")
 
 ##### Output  each individual
-for X in range(0,len(All_Individuals)):
-    Output_File.write(str(All_Individuals_ID[X]) + ":")
-    Output_File.write('--'.join(Haplotypes_Genomewide_per_Indibidual[All_Individuals_ID[X]]))
+for X in sorted(Haplotypes_Genomewide_per_Indibidual.keys()):
+    Output_File.write(str(X) + ":")
+    Output_File.write('--'.join(Haplotypes_Genomewide_per_Indibidual[X]))
     Output_File.write('\n')
-print(Haplotypes_Genomewide_per_Indibidual)

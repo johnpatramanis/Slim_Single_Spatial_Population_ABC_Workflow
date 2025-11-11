@@ -139,18 +139,20 @@ for X in range(0,len(All_Individuals)):
         Total_Ancestry[x] = []
     #### Cycle through Chromosomes
     for CHR in Chromosomes:
-        Ancestries_Here = Chromosome_to_Haplotypes[CHR][Hap_ID]
-        
-        #### Cycle through possible ancestries  
-        for ANC in Number_of_Maximum_Ancestries_Between_Chromosomes:
+        #### Some individuals lack some chromosomes (e.g. Y, or MT)
+        if Hap_ID in Chromosome_to_Haplotypes[CHR].keys():
+            Ancestries_Here = Chromosome_to_Haplotypes[CHR][Hap_ID]
             
-            if ANC in Ancestries_Here.keys():
-                This_Ancestry_This_Individual = Ancestries_Here[ANC]
+            #### Cycle through possible ancestries  
+            for ANC in Number_of_Maximum_Ancestries_Between_Chromosomes:
                 
-            else:
-                This_Ancestry_This_Individual = 0
-            
-            Total_Ancestry[ANC].append(This_Ancestry_This_Individual)
+                if ANC in Ancestries_Here.keys():
+                    This_Ancestry_This_Individual = Ancestries_Here[ANC]
+                    
+                else:
+                    This_Ancestry_This_Individual = 0
+                
+                Total_Ancestry[ANC].append(This_Ancestry_This_Individual)
     
     ### Sum every ancestry across chromosomes
     for ANC in Number_of_Maximum_Ancestries_Between_Chromosomes:
@@ -158,8 +160,7 @@ for X in range(0,len(All_Individuals)):
     ### Assign it to individual
     Every_Individual_Genome_Wide_Ancestry[Hap_ID] = Total_Ancestry
 
-print(Every_Individual_Genome_Wide_Ancestry)
- 
+
 ##### Output it
 Output_File.write(F"Genome_Wide_Ancestries:")
 for ancestry in Number_of_Maximum_Ancestries_Between_Chromosomes:
