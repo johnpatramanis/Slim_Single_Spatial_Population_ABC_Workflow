@@ -27,17 +27,29 @@ Number_of_Simulations = Parameters_File.readline()
 Number_of_Simulations = int(Number_of_Simulations.strip().split()[1])
 
 Parameters={}
-
+Parameter_Types = []
 for line in Parameters_File:
     line = line.strip().split()
     
     #### Get parameter Name, Min Rate, Max Rate
     Name_of_Par = str(line[0])
-    Low_End = float(line[1])
-    High_End = float(line[2])
+    
+    ### if user wants float
+    if '.' in line[1]:
+        Low_End = float(line[1])
+        High_End = float(line[2])
+        
+    ### if user wants integers
+    if '.' not in line[1]:
+        Low_End = int(line[1])
+        High_End = int(line[2])
     
     ###### Generate Parameter for each of X simulations
     Parameter_Values = np.random.uniform(low=Low_End, high=High_End, size=Number_of_Simulations)
+    
+    ##### if input parameter is an integer output should be integer
+    if isinstance(Low_End, int):
+        Parameter_Values = [int(X) for X in Parameter_Values]
     
     #### Round up parameter based on which one it is
     if (Name_of_Par == "K") or (Name_of_Par == "GT") :
@@ -49,7 +61,10 @@ for line in Parameters_File:
     #### Enter Parameter name and values into the dictionary
     Parameters[Name_of_Par] = Parameter_Values
 
-Parameter_Names=[X for X in Parameters.keys()]
+
+    
+
+Parameter_Names = [X for X in Parameters.keys()]
 
 
 
@@ -127,6 +142,7 @@ rule all:
         expand('Simulation_Runs/{sample}/Check_Files/Ancestry_Assigned', sample = Simulations),
         expand('Simulation_Runs/{sample}/Check_Files/Tracks_Calculated', sample = Simulations),
         expand('Simulation_Runs/{sample}/Check_Files/Long_Tracks_Calculated', sample = Simulations),
+        expand('Simulation_Runs/{sample}/Check_Files/Long_Tracks_Plotted', sample = Simulations),
 
 
 
@@ -282,3 +298,26 @@ rule Calculate_Long_Tracks:
       
         #### Checkfile
         shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Long_Tracks_Calculated")
+        
+        
+        
+        
+        
+rule Plot_Long_Tracks:
+    input:
+        'Simulation_Runs/{sample}/Check_Files/Long_Tracks_Calculated'
+    output:
+        'Simulation_Runs/{sample}/Check_Files/Long_Tracks_Plotted'
+    run:
+        
+        #### Make sure file exist and is new
+        if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/Chromosome_Plots")) == True): ### Check if folder exists delete if it does
+            shutil.rmtree(F"Simulation_Runs/{wildcards.sample}/Chromosome_Plots")
+            
+        os.makedirs(F"Simulation_Runs/{wildcards.sample}/Chromosome_Plots") ### Create folder for simulation
+        
+        #### Python script to calculate total track length for each ancestry and each haplotype
+        shell(F"python3 ./Python_Scripts/Paint_Haplotypes_and_For_Individuals_and_Chromosomes.py ./Simulation_Runs/{wildcards.sample}/Haplotypes ./Simulation_Runs/{wildcards.sample}/Chromosome_Plots") ### Python script to generate ancestry files
+      
+        #### Checkfile
+        shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Long_Tracks_Plotted")
