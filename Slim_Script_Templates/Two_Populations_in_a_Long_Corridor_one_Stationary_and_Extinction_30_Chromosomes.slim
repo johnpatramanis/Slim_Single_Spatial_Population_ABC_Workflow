@@ -21,7 +21,8 @@ initialize() {
 		"WIDTH", 50.0,     // width of the simulated area ////
 		"HEIGHT", 10.0,    // height of the simulated area ////
 		"RUNTIME", 10000,    // total number of ticks to run the simulation for ////
-		"REMOVE_BOUNDARIES", 500, // Timeline of Simulation,
+		"REMOVE_BOUNDARIES", 100, // Timeline of Simulation,
+		"KILL_POP_TWO", 700, // Timeline of Simulation,
 		"MU", 0.00000            // mutation rate ////
 		);	
 	
@@ -45,66 +46,36 @@ initialize() {
 	
 	/// Initialize Individual Chromosomes (Haplosomes)
 	
-	/// Create 3 Autosomes	
+	/// Create 29 Autosomes	of 100 Megabase length
 	/// Chromosome 1
-
-	initializeChromosome(1, 1e6 , type="A", symbol="1"); //// Define number of the chromosome, length, type (A = autosome) and ID
-	initializeGenomicElement(g1, 0, 1e6-1); //// Has only 1 genomic element, a non coding region, that covers it full length. 
-	initializeMutationRate(0); //// Has no mutation rate (because we add mutations later)
-	initializeRecombinationRate(1e-8); //// Recombination rate
-
-	initializeChromosome(2, 1e6 , type="A", symbol="2"); //// Define number of the chromosome, length, type (A = autosome) and ID
-	initializeGenomicElement(g1, 0, 1e6-1); //// Has only 1 genomic element, a non coding region, that covers it full length. 
-	initializeMutationRate(0); //// Has no mutation rate (because we add mutations later)
-	initializeRecombinationRate(1e-8); //// Recombination rate
-	
-	initializeChromosome(3, 1e6 , type="A", symbol="3"); //// Define number of the chromosome, length, type (A = autosome) and ID
-	initializeGenomicElement(g1, 0, 1e6-1); //// Has only 1 genomic element, a non coding region, that covers it full length. 
-	initializeMutationRate(0); //// Has no mutation rate (because we add mutations later)
-	initializeRecombinationRate(1e-8); //// Recombination rate
-
-	initializeChromosome(4, 1e6 , type="A", symbol="4"); //// Define number of the chromosome, length, type (A = autosome) and ID
-	initializeGenomicElement(g1, 0, 1e6-1); //// Has only 1 genomic element, a non coding region, that covers it full length. 
-	initializeMutationRate(0); //// Has no mutation rate (because we add mutations later)
-	initializeRecombinationRate(1e-8); //// Recombination rate
-
-	initializeChromosome(5, 1e6 , type="A", symbol="5"); //// Define number of the chromosome, length, type (A = autosome) and ID
-	initializeGenomicElement(g1, 0, 1e6-1); //// Has only 1 genomic element, a non coding region, that covers it full length. 
-	initializeMutationRate(0); //// Has no mutation rate (because we add mutations later)
-	initializeRecombinationRate(1e-8); //// Recombination rate
-
-	initializeChromosome(6, 1e6 , type="A", symbol="6"); //// Define number of the chromosome, length, type (A = autosome) and ID
-	initializeGenomicElement(g1, 0, 1e6-1); //// Has only 1 genomic element, a non coding region, that covers it full length. 
-	initializeMutationRate(0); //// Has no mutation rate (because we add mutations later)
-	initializeRecombinationRate(1e-8); //// Recombination rate
-
-	initializeChromosome(7, 1e6 , type="A", symbol="7"); //// Define number of the chromosome, length, type (A = autosome) and ID
-	initializeGenomicElement(g1, 0, 1e6-1); //// Has only 1 genomic element, a non coding region, that covers it full length. 
-	initializeMutationRate(0); //// Has no mutation rate (because we add mutations later)
-	initializeRecombinationRate(1e-8); //// Recombination rate
-
-	initializeChromosome(8, 1e6 , type="A", symbol="8"); //// Define number of the chromosome, length, type (A = autosome) and ID
-	initializeGenomicElement(g1, 0, 1e6-1); //// Has only 1 genomic element, a non coding region, that covers it full length. 
-	initializeMutationRate(0); //// Has no mutation rate (because we add mutations later)
-	initializeRecombinationRate(1e-8); //// Recombination rate
-
+	ids = 1:29;
+	symbols = asString(1:29);
+	lengths = rep(1e8,29);
+	types = rep('A',29);
+	for (id in ids, symbol in symbols, type in types, length in lengths)
+	{
+		initializeChromosome(id, length, type, symbol);
+		initializeGenomicElement(g1, 0, 1e8-1); //// Length
+		initializeMutationRate(0);
+		initializeRecombinationRate(1e-8);
+		}
 	
 	/// Create Sexual Chromosomes
 	/// X Chromosome
-	initializeChromosome(9, 1e6, type="X", symbol="X"); //// Define number of the chromosome, length, type (X = X-like sexual chromosome) and ID
-	initializeGenomicElement(g1, 0, 1e6-1); //// Length
+	initializeChromosome(30, 1e8, type="X", symbol="X"); //// Define number of the chromosome, length, type (X = X-like sexual chromosome) and ID
+	initializeGenomicElement(g1, 0, 1e8-1); //// Length
 	initializeMutationRate(0); //// No mutation rate
 	initializeRecombinationRate(1e-8); //// Recomb rate
 
 	/// Y Chromosome
-	initializeChromosome(10, 50000, type="Y", symbol="Y"); //// Define number of the chromosome, length, type (Y = Y-like sexual chromosome) and ID
+	initializeChromosome(31, 50000, type="Y", symbol="Y"); //// Define number of the chromosome, length, type (Y = Y-like sexual chromosome) and ID
 	initializeGenomicElement(g1, 0, 49999); //// Has only 1 genomic element
 	initializeMutationRate(0); //// Mutation rate
 	///// No Recombination rate (0 by default)
 	
 	/// Create Mitochondrial Genome
 	
-	initializeChromosome(11, 1656, type="HF", symbol="MT"); //// Define number of the chromosome, length, type (HF = Haploid, inhereted by females) and ID
+	initializeChromosome(32, 1656, type="HF", symbol="MT"); //// Define number of the chromosome, length, type (HF = Haploid, inhereted by females) and ID
 	initializeGenomicElement(g1, 0, 1655); //// Tiny, has only 1 genomic element
 	initializeMutationRate(0); //// Mutation rate
 	//// No recombination rate (0 by default)
@@ -162,6 +133,10 @@ REMOVE_BOUNDARIES first() {
 	///p2.setSpatialBounds(c(0, 0, 100, 25)); //// min_width,min_height,max_width,max_height
 }
 
+KILL_POP_TWO first(){
+sim.killIndividuals(p2.individuals);
+p2.setSpatialBounds(c(15, 15, 20, 20));	
+}
 
 first() {
 	// preparation for the reproduction() callback

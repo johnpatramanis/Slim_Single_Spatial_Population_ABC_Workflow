@@ -122,7 +122,9 @@ initialize() {
 	log = community.createLogFile(OUTDIR + "sim_log.txt", logInterval=1000);
 	log.addCycle();
 	///// log.addCustomColumn("FST", "calcFST(p1.haplosomes, p2.haplosomes);");
-
+	
+	///// Remember individuals of first Slim Generation
+	sim.treeSeqRememberIndividuals(sim.subpopulations.individuals);
 
 }
 
@@ -196,19 +198,26 @@ early() {
 
 //////////////////////////////
 //////////// END OF SIMULATION
-
+///// In case of population colapse
 late() {
 	if (p1.individualCount == 0) {
+		
 		catn("Population went extinct! Ending the simulation.");
+		GEN=sim.cycle;
+		writeFile(OUTDIR + "Slim_Simulation_Failed_To_Finish", GEN );
 		sim.simulationFinished();
+		
 	}
 }
 
+
+
+////// Outputs at the end
 RUNTIME late() {
 	catn("End of simulation (run time reached)");
-	sim.treeSeqOutput(OUTDIR + "Spatial_Simulations_SLim_"  + SEED + ".trees",overwriteDirectory = T); //// Output Tree Sequences into predefined output file
+	sim.treeSeqOutput(OUTDIR + "Spatial_Simulations_SLim_trees",overwriteDirectory = T); //// Output Tree Sequences into predefined output file
 	
-	sim.outputFull(OUTDIR + "Spatial_Simulations_SLim_"  + SEED + ".output_full"); //// Output Full information on the simulation
+	sim.outputFull(OUTDIR + "Spatial_Simulations_SLim.output_full"); //// Output Full information on the simulation
 	
 	inds = c(p1.individuals); //// Prepare and output a VCF file
 	inds.outputIndividualsToVCF(OUTDIR + "Spatial_Simulations_SLim_"  + SEED + ".vcf");

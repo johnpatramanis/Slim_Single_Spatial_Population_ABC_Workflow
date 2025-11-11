@@ -21,7 +21,8 @@ initialize() {
 		"WIDTH", 50.0,     // width of the simulated area ////
 		"HEIGHT", 10.0,    // height of the simulated area ////
 		"RUNTIME", 10000,    // total number of ticks to run the simulation for ////
-		"REMOVE_BOUNDARIES", 500, // Timeline of Simulation,
+		"REMOVE_BOUNDARIES", 100, // Timeline of Simulation,
+		"KILL_POP_TWO", 700, // Timeline of Simulation,
 		"MU", 0.00000            // mutation rate ////
 		);	
 	
@@ -162,6 +163,10 @@ REMOVE_BOUNDARIES first() {
 	///p2.setSpatialBounds(c(0, 0, 100, 25)); //// min_width,min_height,max_width,max_height
 }
 
+KILL_POP_TWO first(){
+sim.killIndividuals(p2.individuals);
+p2.setSpatialBounds(c(15, 15, 20, 20));	
+}
 
 first() {
 	// preparation for the reproduction() callback
