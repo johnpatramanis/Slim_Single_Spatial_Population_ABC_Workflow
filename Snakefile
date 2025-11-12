@@ -143,6 +143,7 @@ rule all:
         expand('Simulation_Runs/{sample}/Check_Files/Tracks_Calculated', sample = Simulations),
         expand('Simulation_Runs/{sample}/Check_Files/Long_Tracks_Calculated', sample = Simulations),
         expand('Simulation_Runs/{sample}/Check_Files/Long_Tracks_Plotted', sample = Simulations),
+        expand('Simulation_Runs/{sample}/Check_Files/Diversity_Calculated', sample = Simulations),
 
 
 
@@ -293,7 +294,7 @@ rule Calculate_Long_Tracks:
             
         os.makedirs(F"Simulation_Runs/{wildcards.sample}/Haplotypes") ### Create folder for simulation
         
-        #### Python script to calculate total track length for each ancestry and each haplotype
+        #### Python script to merge together tracks of common ancestry, forming long continues tracks
         shell(F"python3 ./Python_Scripts/Assemble_Haplotypes_and_Count_Ancestry_For_Chromosome.py ./Simulation_Runs/{wildcards.sample}/Ancestries ./Simulation_Runs/{wildcards.sample}/Haplotypes") ### Python script to generate ancestry files
       
         #### Checkfile
@@ -316,8 +317,35 @@ rule Plot_Long_Tracks:
             
         os.makedirs(F"Simulation_Runs/{wildcards.sample}/Chromosome_Plots") ### Create folder for simulation
         
-        #### Python script to calculate total track length for each ancestry and each haplotype
+        #### Python script to plot chromosomes with ancestry
         shell(F"python3 ./Python_Scripts/Paint_Haplotypes_and_For_Individuals_and_Chromosomes.py ./Simulation_Runs/{wildcards.sample}/Haplotypes ./Simulation_Runs/{wildcards.sample}/Chromosome_Plots") ### Python script to generate ancestry files
       
         #### Checkfile
         shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Long_Tracks_Plotted")
+        
+
+
+
+
+
+        
+rule Coalesce_Calc_Diversity:
+    input:
+        'Simulation_Runs/{sample}/Check_Files/Ancestry_Assigned'
+    output:
+        'Simulation_Runs/{sample}/Check_Files/Diversity_Calculated'
+    run:
+        
+        #### Make sure file exist and is new
+        if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/VCFs")) == True): ### Check if folder exists delete if it does
+            shutil.rmtree(F"Simulation_Runs/{wildcards.sample}/VCFs")
+            
+        os.makedirs(F"Simulation_Runs/{wildcards.sample}/VCFs") ### Create folder for simulation
+        
+        if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/Slim_Simulation_Failed_To_Finish")) == False):
+            
+            #### Python script to recapitate trees, calculate diversity of samples
+            shell(F"python3 ./Python_Scripts/Coalesce_and_Calc_Diversity.py ./Simulation_Runs/{wildcards.sample}/")
+      
+        #### Checkfile
+        shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Diversity_Calculated")
