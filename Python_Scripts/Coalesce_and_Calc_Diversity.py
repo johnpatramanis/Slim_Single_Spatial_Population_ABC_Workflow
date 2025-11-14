@@ -22,7 +22,11 @@ for LINE in Sampled_Individuals_Output:
     LINE = LINE.strip().split()
     Individuals_Info[LINE[0]] = [LINE[1], LINE[2], LINE[3], LINE[4], LINE[5], LINE[6], LINE[7]  ]
 
-
+#### Output file for Diversity metrics
+Div_File = open(f"{Folder}/Diversity_Metrics/Diveristy_Pi.txt", "w")
+Header_Flag = 0 #for later use
+    
+    
 ### Cycle through tree sequence of each chromosome and recapitate tree, calculate diversity metrics
 for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Find tree file of simulation
 
@@ -72,11 +76,22 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
         VCF.close()
         
         
-        
-        
+
+
+
+
+
+
+
+
+
+  
 ################################################################################################################################################################################################################################################################        
 ########## Genetic Diversity Metrics
+    
+    ########## Diversity per chromosome (or PI)
 
+    
     #### For all individuals alive at end of simulation
     Global_Diversity_Chromosome = float(ncts.diversity(sample_sets = ncts.samples(time=0)))
     
@@ -91,7 +106,70 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
             Population_Diversities[POP] = 'DEAD'
     
     #### Only for sampled individuals
-    Nodes_of_Sampled_Individuals = 
-    Sample_Diversity_Chromosome = float(ncts.diversity())
+    Nodes_of_Sampled_Individuals = []
+    for Indiv_ID in VCF_LIST:
+        Node_IDs = ncts.individual(Indiv_ID).nodes
+        Nodes_of_Sampled_Individuals.append(int(ncts.node(Node_IDs[0]).id))
+        Nodes_of_Sampled_Individuals.append(int(ncts.node(Node_IDs[1]).id))
+    #### Filter for nodes that are empty (e.g. females with empty Y chromosome nodes)
+    Nodes_of_Sampled_Individuals = [J for J in Nodes_of_Sampled_Individuals if J in ncts.samples()]
+    Sample_Diversity_Chromosome = float(ncts.diversity(sample_sets = Nodes_of_Sampled_Individuals))
     
-    #### Output Diversity into file
+    ### prepare headers of output need to know how many pops are in simulation
+    if Header_Flag == 0:
+        Div_File.write('Chromosome\tGlobal_Diversity_of_Chromosome\t')
+        Div_File.write('Sample_Set_Diversity_of_Chromosome\t')
+        for POP in range(ncts.num_populations):
+            Div_File.write(F'Population_{POP}_Diversity__of_Chromosome\t')
+        Div_File.write("\n")
+        Header_Flag+=1
+    
+    ### Output metrics for this chromosome
+    Div_File.write(F"{Chromosome_Name}\t")
+    Div_File.write(F"{Global_Diversity_Chromosome}\t")
+    Div_File.write(F"{Sample_Diversity_Chromosome}\t")
+    for POP in range(ncts.num_populations):
+        Div_File.write(F'{Population_Diversities[POP]}\t')
+    Div_File.write("\n")
+    
+    
+    ########## IBD sharing
+    
+    
+    
+    
+    
+    ########## Homozygosity per individual, per chromosome
+    
+    #### Cycle through sampled individuals, check if they have 2 copies of this chromosome (e.g. X,Y,MT are exceptions)
+    Homozygosity_per_Individual_this_Chromosome = []
+    for Indiv_ID in VCF_LIST:
+        
+        #### Get nodes of this individual
+        Node_IDs = ncts.individual(Indiv_ID).nodes
+        Node_1 = ncts.node(Node_IDs[0])
+        Node_2 = ncts.node(Node_IDs[1])
+        
+        Homozygosity_for_this_one = 0
+        #### If 2 valid copies, get genotype, calculate homozygosity
+        if ( ncts.node(Node_1.id).is_sample() and  ncts.node(Node_2.id).is_sample() ):
+            
+            ### get genotypes for each copy of the chromosome
+            Genotype_1 = ncts.genotype_matrix(samples=[Node_1.id])
+            Genotype_2 = ncts.genotype_matrix(samples=[Node_2.id])
+            
+            ### Add them together, 0 = homozygous for ancest, 1 = heterozygous, 2 = homozygous for alt
+            Homozygosity_for_this_one = np.add(Genotype_1,Genotype_2)
+            Allele_States, Counts = np.unique(Homozygosity_for_this_one, return_counts=True)
+            Hom_Anc = int(Counts[0])
+            Hom_Alt = int(Counts[1])
+            Heter = int(Counts[2])
+            Homozygosity_for_this_one = (Hom_Anc + Hom_Alt) / (Hom_Anc + Hom_Alt + Heter)
+        
+        
+        
+        #### if not, say it's invalid    
+        if ( ncts.node(Node_1.id).is_sample() or  ncts.node(Node_2.id).is_sample() ) == False:
+            Homozygosity_for_this_one = 'Invalid'
+        
+        
