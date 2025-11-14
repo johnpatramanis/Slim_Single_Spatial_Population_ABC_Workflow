@@ -339,13 +339,20 @@ rule Coalesce_Calc_Diversity:
         #### Make sure file exist and is new
         if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/VCFs")) == True): ### Check if folder exists delete if it does
             shutil.rmtree(F"Simulation_Runs/{wildcards.sample}/VCFs")
-            
         os.makedirs(F"Simulation_Runs/{wildcards.sample}/VCFs") ### Create folder for simulation
+        
+
+        if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/Diversity_Metrics")) == True): ### Check if folder exists delete if it does
+            shutil.rmtree(F"Simulation_Runs/{wildcards.sample}/Diversity_Metrics")
+        os.makedirs(F"Simulation_Runs/{wildcards.sample}/Diversity_Metrics") ### Create folder for simulation
+        
+        
+
         
         if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/Slim_Simulation_Failed_To_Finish")) == False):
             
             #### Python script to recapitate trees, calculate diversity of samples
             shell(F"python3 ./Python_Scripts/Coalesce_and_Calc_Diversity.py ./Simulation_Runs/{wildcards.sample}/")
-      
+
         #### Checkfile
         shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Diversity_Calculated")
