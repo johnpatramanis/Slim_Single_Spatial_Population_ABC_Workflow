@@ -35,9 +35,21 @@ if len(Genomewide_Ancestries) > 4:
         colorz = tuple(np.random.random(size=3))
         Colours_to_ancestries[ Genomewide_Ancestries[x] ] = colorz
         
-        
-        
-        
+
+#### Read info on sampled individuals
+Individual_Info = []
+Individual_Location = []
+Individuals_File =   open(F"{Folder.replace("Haplotypes","Sampled_Individuals.txt")}",'r')      
+Ind_Headers = Individuals_File.readline().strip().split()
+
+for LINE in Individuals_File:
+    LINE = LINE.strip().split()
+    Individual_Info.append([ LINE[0], LINE[1], LINE[2] , LINE[3], LINE[4], LINE[5], LINE[6] , LINE[7] ])
+    Location = [float(x) for x in LINE[1].split('-')]
+    Individual_Location.append( [LINE[0]] + Location)
+
+Individual_Location = sorted(Individual_Location, key = lambda x: x[1])
+
 ############# Prepare Dictionaries for loading data
 
 CHR_to_Hapl = {}
@@ -83,10 +95,18 @@ for line in File:
 for Chromosome in sorted(CHR_to_Hapl.keys()):
     
     
-    #### Assign a number to each individual
+    ### Sort Haplotypes of this chromosome based on the location of the individual carying them
+    Sorted_IDs = []
+    for x in Individual_Location:
+        for y in CHR_to_Hapl[Chromosome].keys():
+            if x[0] in y:
+                Sorted_IDs.append(y)
+    
+    #### Assign a number to each individual for plotting (Y axis level)
     ID_to_Number = {}
     NGnrt = 0
-    for X in CHR_to_Hapl[Chromosome].keys():
+        
+    for X in Sorted_IDs:
         ID_to_Number[X] = NGnrt
         NGnrt+=1
       

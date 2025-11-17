@@ -7,7 +7,7 @@ import tskit
 import numpy as np
 import os
 import sys
-
+from itertools import combinations
 
 
 
@@ -25,8 +25,15 @@ for LINE in Sampled_Individuals_Output:
 #### Output file for Diversity metrics
 Div_File = open(f"{Folder}/Diversity_Metrics/Diveristy_Pi.txt", "w")
 Header_Flag = 0 #for later use
-    
-    
+#### Output file for Homozygosity metrics
+Homozyg_File = open(f"{Folder}/Diversity_Metrics/Homozygosity.txt", "w")  
+Hom_Header_Flag = 0
+#### Output file for IBD metrics
+IBD_File = open(f"{Folder}/Diversity_Metrics/IBD_sharing.txt", "w")  
+IBD_Header_Flag = 0
+
+
+
 ### Cycle through tree sequence of each chromosome and recapitate tree, calculate diversity metrics
 for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Find tree file of simulation
 
@@ -90,7 +97,6 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
 ########## Genetic Diversity Metrics
     
     ########## Diversity per chromosome (or PI)
-
     
     #### For all individuals alive at end of simulation
     Global_Diversity_Chromosome = float(ncts.diversity(sample_sets = ncts.samples(time=0)))
@@ -105,6 +111,8 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
         if Sample_Set == []:
             Population_Diversities[POP] = 'DEAD'
     
+    
+    
     #### Only for sampled individuals
     Nodes_of_Sampled_Individuals = []
     for Indiv_ID in VCF_LIST:
@@ -114,6 +122,9 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
     #### Filter for nodes that are empty (e.g. females with empty Y chromosome nodes)
     Nodes_of_Sampled_Individuals = [J for J in Nodes_of_Sampled_Individuals if J in ncts.samples()]
     Sample_Diversity_Chromosome = float(ncts.diversity(sample_sets = Nodes_of_Sampled_Individuals))
+    
+    
+    
     
     ### prepare headers of output need to know how many pops are in simulation
     if Header_Flag == 0:
@@ -133,7 +144,35 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
     Div_File.write("\n")
     
     
+    
+    
+    
+    
+    
+    
     ########## IBD sharing
+    IBD_Sharing = []
+    ### prepare headers
+    if IBD_Header_Flag == 0:
+        IBD_File.write('Chromosome\tNodes_of_this_pair\ttotal_IBD_sharing_length\tnumber_of_shared_segments\n')
+
+        IBD_Header_Flag+=1
+    
+    
+    ##### Go through all possible pairs of sampled nodes and calcualte their IBD sharing for this chromosome
+    for COMB in combinations(Nodes_of_Sampled_Individuals, 2):
+        
+        pair = str(COMB[0])+ '-' + str(COMB[1])
+        segments = rts.ibd_segments(within = [COMB[0], COMB[1]], store_pairs = True, store_segments = True)
+        total_IBD_length = segments.total_span
+        number_of_IBD_segments = segments.num_segments
+        
+        IBD_File.write(F"{Chromosome_Name}\t{pair}\t{total_IBD_length}\t{number_of_IBD_segments}\n")
+    
+
+
+    
+    
     
     
     
@@ -142,7 +181,8 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
     ########## Homozygosity per individual, per chromosome
     
     #### Cycle through sampled individuals, check if they have 2 copies of this chromosome (e.g. X,Y,MT are exceptions)
-    Homozygosity_per_Individual_this_Chromosome = []
+    Homozygosity_per_Individual_this_Chromosome = {}
+    
     for Indiv_ID in VCF_LIST:
         
         #### Get nodes of this individual
@@ -160,11 +200,11 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
             
             ### Add them together, 0 = homozygous for ancest, 1 = heterozygous, 2 = homozygous for alt
             Homozygosity_for_this_one = np.add(Genotype_1,Genotype_2)
-            Allele_States, Counts = np.unique(Homozygosity_for_this_one, return_counts=True)
-            Hom_Anc = int(Counts[0])
-            Hom_Alt = int(Counts[1])
-            Heter = int(Counts[2])
-            Homozygosity_for_this_one = (Hom_Anc + Hom_Alt) / (Hom_Anc + Hom_Alt + Heter)
+            Homozygosity_for_this_one = [int(x) for x in Homozygosity_for_this_one]
+            Hom_Anc = Homozygosity_for_this_one.count(0)
+            Hom_Alt = Homozygosity_for_this_one.count(2)
+            Heter = Homozygosity_for_this_one.count(1)
+            Homozygosity_for_this_one = ",".join([ str(x) for x in [Hom_Anc, Hom_Alt, Heter]])
         
         
         
@@ -173,3 +213,18 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
             Homozygosity_for_this_one = 'Invalid'
         
         
+        Homozygosity_per_Individual_this_Chromosome[Indiv_ID] = Homozygosity_for_this_one
+    
+    
+    ##### output header of file: chromosome name and number of homozy for reference, homozy for alternative and heterozygous 
+    if (Hom_Header_Flag == 0):
+        Homozyg_File.write('Chromosome\t')
+        for Indiv_ID in VCF_LIST: 
+            Homozyg_File.write(F'{Indiv_ID}(Hom_Anc,Hom_Alt,Heter)\t')
+        Homozyg_File.write('\n')
+        Hom_Header_Flag=1
+    
+    
+    for Indiv_ID in VCF_LIST:
+        Homozyg_File.write(F'{Homozygosity_for_this_one}\t')
+    Homozyg_File.write('\n')
