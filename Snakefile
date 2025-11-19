@@ -143,6 +143,7 @@ rule all:
         expand('Simulation_Runs/{sample}/Check_Files/Tracks_Calculated', sample = Simulations),
         expand('Simulation_Runs/{sample}/Check_Files/Long_Tracks_Calculated', sample = Simulations),
         expand('Simulation_Runs/{sample}/Check_Files/Long_Tracks_Plotted', sample = Simulations),
+        expand('Simulation_Runs/{sample}/Check_Files/Diversity_and_Ancestry_Plotted', sample = Simulations),
         expand('Simulation_Runs/{sample}/Check_Files/Diversity_Calculated', sample = Simulations),
 
 
@@ -306,7 +307,8 @@ rule Calculate_Long_Tracks:
         
 rule Plot_Long_Tracks:
     input:
-        'Simulation_Runs/{sample}/Check_Files/Long_Tracks_Calculated'
+        'Simulation_Runs/{sample}/Check_Files/Long_Tracks_Calculated',
+        'Simulation_Runs/{sample}/Check_Files/Diversity_Calculated'
     output:
         'Simulation_Runs/{sample}/Check_Files/Long_Tracks_Plotted'
     run:
@@ -324,6 +326,28 @@ rule Plot_Long_Tracks:
         shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Long_Tracks_Plotted")
         
 
+
+rule Plot_Ancestry_and_Diversity_Plots:
+    input:
+        'Simulation_Runs/{sample}/Check_Files/Long_Tracks_Calculated',
+        'Simulation_Runs/{sample}/Check_Files/Tracks_Calculated',
+        'Simulation_Runs/{sample}/Check_Files/Diversity_Calculated'
+    output:
+        'Simulation_Runs/{sample}/Check_Files/Diversity_and_Ancestry_Plotted'
+    run:
+        
+        #### Make sure file exist and is new
+        if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/Ancestry_Plots")) == True): ### Check if folder exists delete if it does
+            shutil.rmtree(F"Simulation_Runs/{wildcards.sample}/Ancestry_Plots")
+            
+        os.makedirs(F"Simulation_Runs/{wildcards.sample}/Ancestry_Plots") ### Create folder for simulation
+        
+        #### Python script to plot chromosomes with ancestry
+        shell(F"python3 ./Python_Scripts/Plot_Histogram_Ancestry.py ./Simulation_Runs/{wildcards.sample}/Tracks ./Simulation_Runs/{wildcards.sample}/Ancestry_Plots") ### Python script to plot barplots and histograms of diversity and ancestry files
+      
+        #### Checkfile
+        shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Diversity_and_Ancestry_Plotted")
+        
 
 
 
