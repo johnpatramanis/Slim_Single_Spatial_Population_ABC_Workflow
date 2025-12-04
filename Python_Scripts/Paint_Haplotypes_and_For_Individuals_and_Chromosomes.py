@@ -97,11 +97,13 @@ for Chromosome in sorted(CHR_to_Hapl.keys()):
     
     ### Sort Haplotypes of this chromosome based on the location of the individual carying them
     Sorted_IDs = []
+
     for x in Individual_Location:
         for y in CHR_to_Hapl[Chromosome].keys():
-            if x[0] in y:
+            ind_ID = y.split('Haplotype')[0]
+            if x[0] in ind_ID:
                 Sorted_IDs.append(y)
-    
+
     #### Assign a number to each individual for plotting (Y axis level)
     ID_to_Number = {}
     NGnrt = 0
@@ -109,14 +111,14 @@ for Chromosome in sorted(CHR_to_Hapl.keys()):
     for X in Sorted_IDs:
         ID_to_Number[X] = NGnrt
         NGnrt+=1
-      
-
+        
     fig, ax = plt.subplots()
 
     ############ 1 plot for each Chromosome
-    
+
     for Individual in sorted(CHR_to_Hapl[Chromosome].keys()):
         
+
         Start = 0
         Segments = CHR_to_Hapl[Chromosome][Individual]
         
