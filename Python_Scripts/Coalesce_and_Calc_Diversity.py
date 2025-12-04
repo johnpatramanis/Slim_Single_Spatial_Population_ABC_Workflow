@@ -60,7 +60,7 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
     ### For each chromosome
     
     ### Recapitate each tree, to coalesce fully all lineages
-    rts = pyslim.recapitate(ts,recombination_rate=1e-8,ancestral_Ne=10000)   ##### Use custome Recombination map (both for Slim and Tskit), see here https://tskit.dev/pyslim/docs/stable/tutorial.html
+    rts = pyslim.recapitate(ts,recombination_rate=1e-8,ancestral_Ne = 10000)   ##### Use custome Recombination map (both for Slim and Tskit), see here https://tskit.dev/pyslim/docs/stable/tutorial.html
     ##### Complicated Demography! https://tskit.dev/pyslim/docs/stable/tutorial.html#sec-recapitate-with-migration
     
     
@@ -225,6 +225,7 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
         Hom_Header_Flag=1
     
     
+    Homozyg_File.write(F"{Chromosome_Name}\t")
     for Indiv_ID in VCF_LIST:
         Homozyg_File.write(F'{Homozygosity_for_this_one}\t')
     Homozyg_File.write('\n')

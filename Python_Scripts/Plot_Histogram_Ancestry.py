@@ -45,7 +45,7 @@ Ind_Headers = Individuals_File.readline().strip().split()
 for LINE in Individuals_File:
     LINE = LINE.strip().split()
     Individual_Info.append([ LINE[0], LINE[1], LINE[2] , LINE[3], LINE[4], LINE[5], LINE[6] , LINE[7] ])
-    Location = [float(x) for x in LINE[1].split('-')]
+    Location = [float(x) for x in LINE[1].split('--')]
     Individual_Location.append( [LINE[0]] + Location)
 
 Individual_Location = sorted(Individual_Location, key = lambda x: x[1])
@@ -94,10 +94,10 @@ for ancestry in range(0,len(Genomewide_Ancestries)):
     plt.bar(BAR_ID, BAR, color = Colours_to_ancestries[Genomewide_Ancestries[ancestry]], width = barWidth, edgecolor ='black', label = F'Ancestry_{ancestry}')
     #barWidth_Add += barWidth
 
-plt.xlabel('Sampled Genomes Sorted by Position', fontweight ='bold', fontsize = 13) 
+plt.xlabel('Sampled Genomes Sorted by Position on X-axis', fontweight ='bold', fontsize = 13) 
 plt.ylabel('Ancestry Percentage', fontweight ='bold', fontsize = 13)
 plt.legend()
-plt.savefig(F"{Output_Folder}/Ancestry_BArplot.pdf")
+plt.savefig(F"{Output_Folder}/Ancestry_Barplot.pdf")
 
 
 

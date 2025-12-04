@@ -174,5 +174,11 @@ for X in range(0,len(All_Individuals)):
     Hap_ID = All_Individuals_ID[X].split("_")[1]
     
     for ancestry in Number_of_Maximum_Ancestries_Between_Chromosomes:
-        Output_File.write( str( Every_Individual_Genome_Wide_Ancestry[Hap_ID][ancestry] ) + "," )
+        
+        To_Write = Every_Individual_Genome_Wide_Ancestry[Hap_ID][ancestry]
+        '{:.20f}'.format(To_Write) #### Supress scientific notation (e.g. 1e2 --> 200)
+        To_Write = str(To_Write)
+        
+        
+        Output_File.write( To_Write + "," )
     Output_File.write("\n")

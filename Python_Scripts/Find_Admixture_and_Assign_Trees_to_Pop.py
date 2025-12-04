@@ -129,7 +129,7 @@ Sampled_Individuals_Output.write('Slim_ID\tLocation\tAge\tSex\tPopulation_ID\tPe
 for SInd in Sampled_Individuals_Last_Gen:
     Slim_ID = ts.individual(SInd)
     ID = Slim_ID.id
-    Location = '-'.join([str(x) for x in Slim_ID.location])
+    Location = '--'.join([str(x) for x in Slim_ID.location])
     MTDATA = Slim_ID.metadata
     pedigree_id = MTDATA['pedigree_id']
     parent1_id = MTDATA['pedigree_p1']

@@ -45,7 +45,7 @@ Ind_Headers = Individuals_File.readline().strip().split()
 for LINE in Individuals_File:
     LINE = LINE.strip().split()
     Individual_Info.append([ LINE[0], LINE[1], LINE[2] , LINE[3], LINE[4], LINE[5], LINE[6] , LINE[7] ])
-    Location = [float(x) for x in LINE[1].split('-')]
+    Location = [float(x) for x in LINE[1].split('--')]
     Individual_Location.append( [LINE[0]] + Location)
 
 Individual_Location = sorted(Individual_Location, key = lambda x: x[1])
