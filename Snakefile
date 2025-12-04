@@ -145,6 +145,7 @@ rule all:
         expand('Simulation_Runs/{sample}/Check_Files/Long_Tracks_Plotted', sample = Simulations),
         expand('Simulation_Runs/{sample}/Check_Files/Diversity_and_Ancestry_Plotted', sample = Simulations),
         expand('Simulation_Runs/{sample}/Check_Files/Diversity_Calculated', sample = Simulations),
+        expand('Simulation_Runs/{sample}/Check_Files/Matching_Ancestry_Calculated', sample = Simulations),
 
 
 
@@ -380,3 +381,26 @@ rule Coalesce_Calc_Diversity:
 
         #### Checkfile
         shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Diversity_Calculated")
+        
+        
+        
+        
+        
+rule Calc_Matching_Ancestry:
+    input:
+        'Simulation_Runs/{sample}/Check_Files/Diversity_Calculated',
+        'Simulation_Runs/{sample}/Check_Files/Ancestry_Assigned'
+        
+    output:
+        'Simulation_Runs/{sample}/Check_Files/Matching_Ancestry_Calculated'
+    run:
+        
+
+        
+        if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/Slim_Simulation_Failed_To_Finish")) == False):
+            
+            #### Python script to recapitate trees, calculate diversity of samples
+            shell(F"python3 ./Python_Scripts/Calculate_Shared_Matching_Ancestry.py ./Simulation_Runs/{wildcards.sample}/Ancestries ./Simulation_Runs/{wildcards.sample}/")
+
+        #### Checkfile
+        shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Matching_Ancestry_Calculated")
