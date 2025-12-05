@@ -47,7 +47,7 @@ Output_Folder = sys.argv[2]
 
 #### Output file for IBD metrics
 Output_File = open(f"{Output_Folder}/Diversity_Metrics/Ancestry_Sharing.txt", "w")
-Output_File.write('Chromosome\tAncestry\tID_1\tID_2\tMatching_Haplotypes\n')
+Output_File.write('Chromosome\tAncestry\tID_1\tID_2\tTotal_length_of_matching_ancestry\tTotal_length_of_chromosome\tMatching_length_divided_by_chromosome_length\n')
 
 Chromosome_to_Ancestries = {}
 Chromosomes = []
@@ -130,8 +130,11 @@ for File in os.listdir(F"{Folder}"):
             if (sum(Missmatching_Trees) + sum(Matching_Trees)) == 0:
                 Percentage_of_Match = 0
             
+            Total_Matching = sum(Matching_Trees)
+            Chromosome_lengh = sum(Tree_Lengths)
+            Percentage = Total_Matching / Chromosome_lengh
             
-            To_Print = F"{Chromosome}\t{ancestry}\t{ID_1}\t{ID_2}\t{Percentage_of_Match}\n"
+            To_Print = F"{Chromosome}\t{ancestry}\t{ID_1}\t{ID_2}\t{Total_Matching}\t{Chromosome_lengh}\t{Percentage}\n"
             Output_File.write(To_Print)
 
             
