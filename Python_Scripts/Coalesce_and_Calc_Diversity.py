@@ -176,7 +176,7 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
     
     
     
-    
+    Chromosome_Length = ncts.sequence_length
     
     ########## Homozygosity per individual, per chromosome
     
@@ -204,7 +204,7 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
             Hom_Anc = Homozygosity_for_this_one.count(0)
             Hom_Alt = Homozygosity_for_this_one.count(2)
             Heter = Homozygosity_for_this_one.count(1)
-            Homozygosity_for_this_one = ",".join([ str(x) for x in [Hom_Anc, Hom_Alt, Heter]])
+            Homozygosity_for_this_one = ",".join([ str(x) for x in [Chromosome_Length, Hom_Alt, Heter]])
         
         
         
@@ -220,12 +220,12 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
     if (Hom_Header_Flag == 0):
         Homozyg_File.write('Chromosome\t')
         for Indiv_ID in VCF_LIST: 
-            Homozyg_File.write(F'{Indiv_ID}(Hom_Anc,Hom_Alt,Heter)\t')
+            Homozyg_File.write(F'{Indiv_ID}(Chr_length,Hom_Alt,Heter)\t')
         Homozyg_File.write('\n')
-        Hom_Header_Flag=1
+        Hom_Header_Flag = 1
     
     
     Homozyg_File.write(F"{Chromosome_Name}\t")
     for Indiv_ID in VCF_LIST:
-        Homozyg_File.write(F'{Homozygosity_for_this_one}\t')
+        Homozyg_File.write(F'{Homozygosity_per_Individual_this_Chromosome[Indiv_ID]}\t')
     Homozyg_File.write('\n')
