@@ -59,10 +59,58 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
     
     ### For each chromosome
     
-    ### Recapitate each tree, to coalesce fully all lineages
-    rts = pyslim.recapitate(ts,recombination_rate=1e-8,ancestral_Ne = 10000)   ##### Use custome Recombination map (both for Slim and Tskit), see here https://tskit.dev/pyslim/docs/stable/tutorial.html
-    ##### Complicated Demography! https://tskit.dev/pyslim/docs/stable/tutorial.html#sec-recapitate-with-migration
     
+    
+    
+    ### Recapitate (given input demograph, or a standard demographic model)
+    
+    ##### If no demography file given, use a standard demography
+    if os.path.exists(F'{Folder}/Demography.yaml') == False:
+    
+        
+        Start_of_SLiM_time = float(ts.max_root_time)
+        
+        
+        ##### if exactly 3 (2 +1  ancestral) populations, use a custom out of Africa model
+        if ts.num_populations == 3:
+            
+            ### Set up Demography
+            Demography = msprime.Demography.from_tree_sequence(ts)
+            
+            Demography.add_population_parameters_change(time = 0, initial_size = 10000, population = 'p1')
+            Demography.add_population_parameters_change(time = 0, initial_size = 1500, population = 'p2')
+            Demography.add_population_split(time = (18000 + Start_of_SLiM_time) , ancestral = 'pop_0', derived = ('p1','p2'))
+            Demography.add_population_parameters_change(time = (18000 + Start_of_SLiM_time) , initial_size = 10000, population = 'pop_0')
+            
+            ### use Demography for Recapitation
+            rts = pyslim.recapitate(ts, demography = Demography, recombination_rate=1e-8 )
+        
+        
+        
+        ### If more than 3 (2+1, counting the always exisitng ghots pop 'pop_0'  )
+        if ts.num_populations > 3:
+            ### Recapitate each tree, to coalesce fully all lineages
+            rts = pyslim.recapitate(ts, recombination_rate=1e-8, ancestral_Ne = 10000)   ##### Use custome Recombination map (both for Slim and Tskit), see here https://tskit.dev/pyslim/docs/stable/tutorial.html
+        
+    
+    
+    
+    #### Else load demography from file
+    
+    if os.path.exists(F'{Folder}/Demography.txt') == True:
+        
+        import demes
+        graph = demes.load(F'{Folder}/Demography.yaml')
+        Demes_ography = msprime.Demography.from_demes(graph)
+        rts = pyslim.recapitate(ts, demography = Demes_ography, recombination_rate=1e-8 )
+    
+    
+    
+    
+    
+    
+    
+    ################## Once Recapitation is done, add mutations and generate a VCF file
     
     
     ### Add neutral mutations to simplified tree
@@ -83,6 +131,9 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
         VCF.close()
         
         
+
+
+
 
 
 
