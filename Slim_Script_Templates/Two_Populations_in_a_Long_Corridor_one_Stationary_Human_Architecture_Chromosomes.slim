@@ -1,0 +1,316 @@
+////// SKELETON ON "SPACE IS PLACE" - https://github.com/kr-colab/spaceness/blob/master/slim_recipes/flat_map.slim
+////// V2 Updates: Cross-population competition after expansion, 2 biol sexes, Admxiture between 2 populations
+////// V3 Updates: Chromosomal structure, including 3 autosomes, x, Y and mitochondrial
+
+
+initialize() { 
+	initializeSLiMModelType("nonWF");  //////// Slim Command to iniitiate NON-WF models
+	initializeSLiMOptions(dimensionality = "xy"); //////// Initiate 2 dimmentional space
+	initializeSex(); ////// Initiate Seperation of Biological Sex
+	
+	// This model uses tree-sequence recording, but it is optional
+	initializeTreeSeq();    //////// Initiate tree-sequence recording
+	
+	defaults = Dictionary(
+		"SEED", getSeed(),
+		"SD", 0.5,         // sigma_D, dispersal distance //// Is only used to move new born individuals in "early" //// higher => increased movement
+		"SX", 0.5,         // sigma_X, interaction distance for measuring local density //// Used to create an interaction, which is then used for reducing fitness based on the proximity of other individuals
+		"SM", 0.5,         // sigma_M, mate choice distance //// Used to create an interaction, which is then used to pick a candidate for mating
+		"K", 5,            // carrying capacity per unit area //// Used to calcualte RHO= FECUN / ((1 + FECUN) * K)) //// Used for initial population number of individuals = K * WIDTH * HEIGHT
+		"LIFETIME", 4,     // average life span ////
+		"WIDTH", 50.0,     // width of the simulated area ////
+		"HEIGHT", 10.0,    // height of the simulated area ////
+		"RUNTIME", 10000,    // total number of ticks to run the simulation for ////
+		"REMOVE_BOUNDARIES", 100, // Timeline of Simulation,
+		"KILL_POP_TWO", 700, // Timeline of Simulation,
+		"MU", 0.00000,            // mutation rate ////
+		"Genome_Architecture_Path", "../../Human_Genome_Architecture/"  // generic path for chromosome files ///
+		);	
+	
+	// Set up parameters with a user-defined function
+	setupParams(defaults);
+	
+	// Set up constants that depend on externally defined parameters
+	defineConstant("FECUN", 1 / LIFETIME);
+	defineConstant("RHO", FECUN / ((1 + FECUN) * K));
+	defineConstant("PARAMS", defaults);
+	
+	/// 
+	setSeed(SEED);
+
+	//////// basic neutral genetics
+	//// Initialize Possible Mutations
+	initializeMutationType("m1", 0.5, "f", 0.0); ///standard neutral mutation
+	
+	//// Initialize Possible Genomic Elements
+	initializeGenomicElementType("g1", m1, 1.0); /// Non coding region, only neutral mutations
+	
+	/// Initialize Individual Chromosomes (Haplosomes)
+	/// Human chromosome sizes from https://github.com/bhaller/SimHumanity 
+	/// Define the ids, symbols, types, and lengths of all nuclear chromosomes
+	ids = 1:25;
+	symbols = c(1:22, "X", "Y","MT");
+	types = c(rep("A", 22), "X", "Y","HF");
+	lengths = c(248956422, 242193529, 198295559, 190214555, 181538259,
+		170805979, 159345973, 145138636, 138394717, 133797422, 135086622,
+		133275309, 114364328, 107043718, 101991189, 90338345, 83257441,
+		80373285, 58617616, 64444167, 46709983, 50818468, 156040895,
+		57227415,1656);
+	
+	///
+	
+	
+	for (id in ids, symbol in symbols, type in types, length in lengths)
+	{
+		// Length
+		initializeChromosome(id, length, type, symbol);
+		
+		// Mutation Rate
+		initializeMutationRate(0);
+		
+		
+		// Recombination Rate
+		
+		//// Should you want to use generic, flat recombination rate
+		// initializeRecombinationRate(1e-8);
+		//// Should you want to use imorted genomic elements
+		// Read the recombination rate map from a file
+		Recombination_File = Genome_Architecture_Path + "chr" + symbol + "_recombination.txt";
+		
+		if (fileExists(Recombination_File)) {
+			
+			initializeRecombinationRateFromFile(Recombination_File, length-1, scale=1.0, sep=",");	
+		}
+		else{
+			
+			initializeRecombinationRate(1e-8);
+		}
+		
+		
+		
+		
+		
+		
+		// Genomic elements
+		
+		//// Should you want to use flat genomic elements
+		initializeGenomicElement(g1, 0, length-1);
+		
+		//// Should you want to use imorted genomic elements
+		/// Read the genomic element structure of coding vs. non-coding regions
+		/// from another file, which gives genomic element types and positions
+		///Genomic_Elements_Path = CHR_PATH + "chr" + symbol + "_genomic_elements.txt";
+		/// initializeGenomicElementsFromFile(gpath);
+		
+		
+		
+	}
+	
+
+	
+	
+	
+	
+	// spatial interaction for local density measurement
+	initializeInteractionType(1, "xy", reciprocal=T, maxDistance=3 * SX); //// Initiate a local interaction using the 3*SX as maximum distance
+	i1.setInteractionFunction("n", 1.0/(2*PI*SX^2), SX); ///// and make it a normal distribution with a mean of 1.0/(2*PI*SX^2)
+	
+	// spatial interaction for mate choice
+	initializeInteractionType(2, "xy", reciprocal=T, maxDistance=3 * SM); //// Initiate a local interaction using the 3*SM as maximum distance
+	i2.setInteractionFunction("n", 1.0/(2*PI*SM^2), SM); ///// and make it a normal distribution with a mean of 1.0/(2*PI*SM^2)
+	
+	i2.setConstraints("receiver", sex="F", minAge=1, maxAge= (LIFETIME*3));
+	i2.setConstraints("exerter", sex="M", minAge=1, maxAge= (LIFETIME*3));
+	
+	
+	// spatial interaction for local density measurement
+	initializeInteractionType(3, "xy", reciprocal=T, maxDistance=3 * SX); //// Initiate a local interaction using the 3*SX as maximum distance
+	i3.setInteractionFunction("n", 1.0/(2*PI*SX^2), SX); ///// and make it a normal distribution with a mean of 1.0/(2*PI*SX^2)
+	
+	// spatial interaction for mate choice, seperate for 2nd population
+	///initializeInteractionType(4, "xy", reciprocal=T, maxDistance=3 * SM); //// Initiate a local interaction using the 3*SM as maximum distance
+	/// i4.setInteractionFunction("n", 1.0/(2*PI*SM^2), SM); ///// and make it a normal distribution with a mean of 1.0/(2*PI*SM^2)
+
+	
+    
+
+
+
+}
+
+1 first() {
+	
+	/// Set up pop1
+	sim.addSubpop("p1", asInteger(500));  ////// add Initial population 
+	p1.setSpatialBounds(c(0, 0, WIDTH/10, HEIGHT/2));   /////// Add spatial bounds for population 1
+	p1.individuals.setSpatialPosition(p1.pointUniform(p1.individualCount));  ///// Place Individuals from pop1 into spatial boundaries of population 1
+	
+	/// Set up pop2
+	sim.addSubpop("p2", asInteger(500));  ////// add Initial population 
+	p2.setSpatialBounds(c( (WIDTH-(WIDTH/10)), (HEIGHT-(HEIGHT/2)), WIDTH, HEIGHT));   /////// Add spatial bounds for population 1
+	p2.individuals.setSpatialPosition(p2.pointUniform(p2.individualCount));  ///// Place Individuals from pop1 
+	
+	//////
+
+	//////
+	log = community.createLogFile(OUTDIR + "sim_log.txt", logInterval=1000);
+	log.addCycle();
+	///// log.addCustomColumn("FST", "calcFST(p1.haplosomes, p2.haplosomes);");
+}
+
+
+REMOVE_BOUNDARIES first() {
+	p1.setSpatialBounds(c(0, 0, 100, 25)); //// min_width,min_height,max_width,max_height
+	///p2.setSpatialBounds(c(0, 0, 100, 25)); //// min_width,min_height,max_width,max_height
+}
+
+KILL_POP_TWO first(){
+sim.killIndividuals(p2.individuals);
+p2.setSpatialBounds(c(15, 15, 20, 20));	
+}
+
+first() {
+	// preparation for the reproduction() callback
+	i2.evaluate(p1);
+	i2.evaluate(p2);
+}
+
+
+reproduction() { ///// Works for both populations
+	
+	mate = i2.drawByStrength(individual, 1);
+	
+	
+	
+	///// Once Boundaries are off, give option for other population
+	GEN=sim.cycle;
+	if (GEN>REMOVE_BOUNDARIES){
+	
+		mate1 = i2.drawByStrength(individual, 1, p1); /// Draw a good candidate from pop 1
+		mate2 = i2.drawByStrength(individual, 1, p2); /// Draw a good candidate from pop 2
+		possible_mates=c(mate1,mate2); /// Combine them into a list
+	
+		if (possible_mates.size()){
+			mate = sample(possible_mates,1); /// If list not empty, pick randomly
+		}
+	}	
+	
+	
+	if (mate.size()){
+		///print(c(individual.subpopulation,mate.subpopulation));
+		subpop.addCrossed(individual, mate, count=rpois(1, 3*FECUN));	
+	}
+	
+	
+	
+}
+
+
+
+/////////////////////////////////////////////
+//////////// DISPERSAL AND SURVIVAL ////////
+
+early() {
+	///////////////////////
+	//// Disperse offspring
+	offspring_p1 = p1.subsetIndividuals(maxAge=0);
+	offspring_p2 = p2.subsetIndividuals(maxAge=0);
+	
+	p1.deviatePositions(offspring_p1, "stopping", 1, "n", SD); /////// population_name.deviatePositions(vector_of_individuals, what_happens_at_boundaries ,cutoff_to_zero_at_specific_distance (max distnace?) ,normal_distribution ,mean of distribution)
+	p2.deviatePositions(offspring_p2, "stopping", 1, "n", SD);
+
+	
+	///////////////////////////////////////////////////////////
+	// Measure local density and use it for density regulation
+	i1.evaluate(p1);
+	i3.evaluate(p2);
+	i3.evaluate(p1);
+	i1.evaluate(p2);
+	
+	inds_p1 = p1.individuals;
+	inds_p2 = p2.individuals;
+
+	
+	
+	competition_p1 = i1.localPopulationDensity(inds_p1);
+	competition_p2 = i3.localPopulationDensity(inds_p2);
+	competition_p1 = competition_p1*0.5 + i3.localPopulationDensity(inds_p1)*0.5;
+	competition_p2 = competition_p2*0.5 + i1.localPopulationDensity(inds_p2)*0.5;
+	
+	GEN=sim.cycle;
+	
+	
+	
+	
+	
+	inds_p1.fitnessScaling = pmin(0.95,(1 / (1 + RHO * competition_p1)));
+	inds_p2.fitnessScaling = pmin(0.95,(1 / (1 + RHO * competition_p2)));
+	
+	
+}
+
+
+
+
+
+//////////////////////////////
+//////////// END OF SIMULATION
+late() {
+	
+	if (p1.individualCount == 0) {
+		
+		catn("Population went extinct! Ending the simulation.");
+		GEN=sim.cycle;
+		writeFile(OUTDIR + "Slim_Simulation_Failed_To_Finish", asString(GEN) );
+		sim.treeSeqOutput(OUTDIR + "Spatial_Simulations_SLim.trees",overwriteDirectory = T);
+		sim.outputFull(OUTDIR + "Spatial_Simulations_SLim.output_full");
+		sim.simulationFinished();
+		
+		
+	}
+}
+
+
+
+RUNTIME late() {
+	catn("End of simulation (run time reached)");
+	sim.treeSeqOutput(OUTDIR + "Spatial_Simulations_SLim.trees",overwriteDirectory = T); //// Output Tree Sequences into predefined output file
+	
+	sim.outputFull(OUTDIR + "Spatial_Simulations_SLim.output_full"); //// Output Full information on the simulation
+	
+	inds = c(p1.individuals); //// Prepare and output a VCF file
+	inds.outputIndividualsToVCF(OUTDIR + "Spatial_Simulations_SLim_"  + SEED + ".vcf");
+	
+	sim.simulationFinished();
+	
+}
+
+
+
+
+
+
+/////////////////////////
+//////////// OUTPUT STUFF
+function (void)setupParams(object<Dictionary>$ defaults)
+{
+	if (!exists("PARAMFILE")) defineConstant("PARAMFILE", "./params.json");
+	
+	if (fileExists(PARAMFILE)) {
+		defaults.addKeysAndValuesFrom(Dictionary(readFile(PARAMFILE)));
+		defaults.setValue("READ_FROM_PARAMFILE", PARAMFILE);
+	}
+
+	for (k in defaults.allKeys) {
+		if (!exists(k))
+			defineConstant(k, defaults.getValue(k));
+		else
+			defaults.setValue(k, executeLambda(k + ";"));
+	}
+	
+	// print out default values
+	catn("===========================");
+	catn("Model constants: " + defaults.serialize("pretty"));
+	catn("===========================");
+}
+
