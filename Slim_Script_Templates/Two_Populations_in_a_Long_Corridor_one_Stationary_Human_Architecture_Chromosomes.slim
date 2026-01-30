@@ -112,24 +112,25 @@ initialize() {
 	
 	
 	// spatial interaction for local density measurement
-	initializeInteractionType(1, "xy", reciprocal=T, maxDistance=3 * SX); //// Initiate a local interaction using the 3*SX as maximum distance
-	i1.setInteractionFunction("n", 1.0/(2*PI*SX^2), SX); ///// and make it a normal distribution with a mean of 1.0/(2*PI*SX^2)
+	initializeInteractionType(1, "xy", reciprocal = T, maxDistance = (3*SX) ); //// Initiate a local interaction using the 3*SX as maximum distance
+	i1.setInteractionFunction("n", 1.0/(2*PI*SX^2), SX);                      //// and make it a normal distribution with a mean of 1.0/(2*PI*SX^2)
 	
 	// spatial interaction for mate choice
-	initializeInteractionType(2, "xy", reciprocal=T, maxDistance=3 * SM); //// Initiate a local interaction using the 3*SM as maximum distance
-	i2.setInteractionFunction("n", 1.0/(2*PI*SM^2), SM); ///// and make it a normal distribution with a mean of 1.0/(2*PI*SM^2)
+	initializeInteractionType(2, "xy", reciprocal = T, maxDistance = (3*SM) ); //// Initiate a local interaction using the 3*SM as maximum distance
+	i2.setInteractionFunction("n", 1.0/(2*PI*SM^2), SM);                      //// and make it a normal distribution with a mean of 1.0/(2*PI*SM^2)
 	
-	i2.setConstraints("receiver", sex="F", minAge=1, maxAge= (LIFETIME*3));
-	i2.setConstraints("exerter", sex="M", minAge=1, maxAge= (LIFETIME*3));
+	i2.setConstraints("receiver", sex="F", minAge = 1, maxAge = (LIFETIME*3) );   //// Females 'receive' signal from males to make their choice
+	i2.setConstraints("exerter", sex="M", minAge = 1, maxAge = (LIFETIME*3) );   ////  Males exert signal. Both sexes can only participate in mating until they are 3*LIFETIME old
 	
 	
 	// spatial interaction for local density measurement
-	initializeInteractionType(3, "xy", reciprocal=T, maxDistance=3 * SX); //// Initiate a local interaction using the 3*SX as maximum distance
-	i3.setInteractionFunction("n", 1.0/(2*PI*SX^2), SX); ///// and make it a normal distribution with a mean of 1.0/(2*PI*SX^2)
+	initializeInteractionType(3, "xy", reciprocal = T, maxDistance = (3*SX) ); //// Initiate a local interaction using the 3*SX as maximum distance
+	i3.setInteractionFunction("n", 1.0/(2*PI*SX^2), SX);                      //// and make it a normal distribution with a mean of 1.0/(2*PI*SX^2)
 	
-	// spatial interaction for mate choice, seperate for 2nd population
-	///initializeInteractionType(4, "xy", reciprocal=T, maxDistance=3 * SM); //// Initiate a local interaction using the 3*SM as maximum distance
-	/// i4.setInteractionFunction("n", 1.0/(2*PI*SM^2), SM); ///// and make it a normal distribution with a mean of 1.0/(2*PI*SM^2)
+	
+	//// spatial interaction for mate choice, seperate for 2nd population
+	//// initializeInteractionType(4, "xy", reciprocal=T, maxDistance=3 * SM); //// Initiate a local interaction using the 3*SM as maximum distance
+	//// i4.setInteractionFunction("n", 1.0/(2*PI*SM^2), SM); ///// and make it a normal distribution with a mean of 1.0/(2*PI*SM^2)
 
 	
     
@@ -184,7 +185,7 @@ reproduction() { ///// Works for both populations
 	
 	///// Once Boundaries are off, give option for other population
 	GEN=sim.cycle;
-	if (GEN>REMOVE_BOUNDARIES){
+	if (GEN > REMOVE_BOUNDARIES){ /// only allowed after "REMOVE_BOUNDARIES" time
 	
 		mate1 = i2.drawByStrength(individual, 1, p1); /// Draw a good candidate from pop 1
 		mate2 = i2.drawByStrength(individual, 1, p2); /// Draw a good candidate from pop 2
@@ -196,7 +197,7 @@ reproduction() { ///// Works for both populations
 	}	
 	
 	
-	if (mate.size()){
+	if (mate.size()){ //// If list not empty, mate with chosen individual
 		///print(c(individual.subpopulation,mate.subpopulation));
 		subpop.addCrossed(individual, mate, count=rpois(1, 3*FECUN));	
 	}
@@ -216,8 +217,8 @@ early() {
 	offspring_p1 = p1.subsetIndividuals(maxAge=0);
 	offspring_p2 = p2.subsetIndividuals(maxAge=0);
 	
-	p1.deviatePositions(offspring_p1, "stopping", 1, "n", SD); /////// population_name.deviatePositions(vector_of_individuals, what_happens_at_boundaries ,cutoff_to_zero_at_specific_distance (max distnace?) ,normal_distribution ,mean of distribution)
-	p2.deviatePositions(offspring_p2, "stopping", 1, "n", SD);
+	p1.deviatePositions(offspring_p1, "stopping", 1, "n", SD);  ////// population_name.deviatePositions(vector_of_individuals, what_happens_at_boundaries ,cutoff_to_zero_at_specific_distance (max distnace?) ,normal_distribution ,mean of distribution)
+	p2.deviatePositions(offspring_p2, "stopping", 1, "n", SD); //////
 
 	
 	///////////////////////////////////////////////////////////
@@ -229,7 +230,7 @@ early() {
 	
 	inds_p1 = p1.individuals;
 	inds_p2 = p2.individuals;
-
+	
 	
 	
 	competition_p1 = i1.localPopulationDensity(inds_p1);
@@ -237,9 +238,7 @@ early() {
 	competition_p1 = competition_p1*0.5 + i3.localPopulationDensity(inds_p1)*0.5;
 	competition_p2 = competition_p2*0.5 + i1.localPopulationDensity(inds_p2)*0.5;
 	
-	GEN=sim.cycle;
-	
-	
+	GEN = sim.cycle;
 	
 	
 	
