@@ -20,7 +20,7 @@ Labels = Sampled_Individuals_Output.readline().strip().split()
 
 for LINE in Sampled_Individuals_Output:
     LINE = LINE.strip().split()
-    Individuals_Info[LINE[0]] = [LINE[1], LINE[2], LINE[3], LINE[4], LINE[5], LINE[6], LINE[7]  ]
+    Individuals_Info[ LINE[0]] = [LINE[1], LINE[2], LINE[3], LINE[4], LINE[5], LINE[6], LINE[7] ]
 
 #### Output file for Diversity metrics
 Div_File = open(f"{Folder}/Diversity_Metrics/Diveristy_Pi.txt", "w")
