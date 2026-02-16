@@ -1,4 +1,4 @@
-########### Calculate_Shared_Matching_Ancestry.py ./Simulation_Runs/Simulation_0/Ancestries ./Simulation_Runs/Simulation_0/
+########### python Python_Scripts/Calculate_Shared_Matching_Ancestry.py ./Simulation_Runs/Simulation_0/Ancestries ./Simulation_Runs/Simulation_0/
 import sys
 import os
 from itertools import combinations
@@ -47,7 +47,7 @@ Output_Folder = sys.argv[2]
 
 #### Output file for IBD metrics
 Output_File = open(f"{Output_Folder}/Diversity_Metrics/Ancestry_Sharing.txt", "w")
-Output_File.write('Chromosome\tAncestry\tID_1\tID_2\tTotal_length_of_matching_ancestry\tTotal_length_of_chromosome\tMatching_length_divided_by_chromosome_length\n')
+Output_File.write('Chromosome\tAncestry\tID_1\tID_2\tTotal_length_of_matching_ancestry\tTotal_length_of_missmatching_ancestry\tTotal_length_at_least_one\tTotal_length_of_no_ancestry\tPattern_Matching_Metric\n')
 
 Chromosome_to_Ancestries = {}
 Chromosomes = []
@@ -109,11 +109,11 @@ for File in os.listdir(F"{Folder}"):
     #### Go through all combinations of haplotsome for this chromosome
     for PAIR in  Combinations_of_Pairs:
         
-        Candidate_1 = All_Individuals[PAIR[0]]
-        Candidate_2 = All_Individuals[PAIR[1]]
+        Candidate_1 = All_Individuals[PAIR[0]] ### Trees of this chromosome, for this haplosome
+        Candidate_2 = All_Individuals[PAIR[1]] ### <<
         
-        ID_1 = All_Individuals_ID[PAIR[0]]
-        ID_2 = All_Individuals_ID[PAIR[1]]
+        ID_1 = All_Individuals_ID[PAIR[0]] ### ID of haplosome
+        ID_2 = All_Individuals_ID[PAIR[1]] ### <<
         
         #### for each ancestry 
         for ancestry in Ancestries:
@@ -124,17 +124,29 @@ for File in os.listdir(F"{Folder}"):
             #### Returns two lists of tree lengths
             Matching_Trees, Missmatching_Trees = Return_Matching_Trees(Candidate_1 ,Candidate_2 ,Tree_Lengths ,ancestry)
             
-            if (sum(Missmatching_Trees) + sum(Matching_Trees)) != 0:
-                Percentage_of_Match = sum(Matching_Trees) / (sum(Missmatching_Trees) + sum(Matching_Trees))
-                
-            if (sum(Missmatching_Trees) + sum(Matching_Trees)) == 0:
-                Percentage_of_Match = 0
-            
+            ### Both share ancestry under question for this length
             Total_Matching = sum(Matching_Trees)
-            Chromosome_lengh = sum(Tree_Lengths)
-            Percentage = Total_Matching / Chromosome_lengh
             
-            To_Print = F"{Chromosome}\t{ancestry}\t{ID_1}\t{ID_2}\t{Total_Matching}\t{Chromosome_lengh}\t{Percentage}\n"
+            ### One of them has the ancestry under question for this length, the other doesn't
+            Total_MissMatching = sum(Missmatching_Trees)
+            
+            ### AT LEAST ONE of them has the ancestry under question for this length
+            Total_Covering = Total_Matching + Total_MissMatching
+            
+            ### Neither of them have the ancestry under question for this length
+            Chromosome_lengh = sum(Tree_Lengths)
+            Total_NoAncestry = Chromosome_lengh - ( Total_Matching + Total_MissMatching )
+            
+            
+            ### In case no ancestry
+            if Total_Covering != 0:
+            ### One metric to sum this up
+                Metric = Total_Matching / Total_Covering
+            else:
+                'No_ancestry'
+            
+            
+            To_Print = F"{Chromosome}\t{ancestry}\t{ID_1}\t{ID_2}\t{Total_Matching}\t{Total_MissMatching}\t{Total_Covering}\t{Total_NoAncestry}\t{Metric}\n"
             Output_File.write(To_Print)
 
             
