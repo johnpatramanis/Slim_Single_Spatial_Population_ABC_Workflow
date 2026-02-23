@@ -1,4 +1,4 @@
-########### python Python_Scripts/Calculate_Ancestry_Length_Distribution.py ./Simulation_Runs/Simulation_0/Haplotypes/Whole_Genome.total_haplotypes ./Simulation_Runs/Simulation_0/
+########### python Python_Scripts/Calculate_Ancestry_Length_Distribution.py ./Simulation_Runs/Simulation_0/Haplotypes/Whole_Genome.total_haplotypes ./Simulation_Runs/Simulation_0/Diversity_Metrics
 import sys
 import os
 import numpy as np
@@ -63,18 +63,24 @@ for LINE in Haplotype_Lengths_File:
 #### Each ancestry entry is a list of all the lengths of the chunks      
 #### e.g.  print(Individuals_to_Length_Distributions['Individual_4707'])
 
-Output_File = open(F"{Output_Folder}/Diversity_Metrics/Ancestry_Lengths.txt",'w')
+Output_File = open(F"{Output_Folder}/Ancestry_Lengths.txt",'w')
+Output_File_2 = open(F"{Output_Folder}/Ancestry_Lengths_Full_Distribution.txt",'w')
 
 Output_File.write("Individual")
+Output_File_2.write("Individual")
 for ANC in Genome_Wide_Ancestries:
     Output_File.write(F"\tAncestry_{ANC}_mean_segment_length_and_variance")
+    Output_File_2.write(F"\tAncestry_{ANC}_Lengths_All")
 Output_File.write("\n")
+Output_File_2.write("\n")
 
 
 ### Cycle through individuals and their ancestries
 for IND in Individuals_to_Length_Distributions.keys():
     
     Output_File.write(F"{IND}")
+    Output_File_2.write(F"{IND}")
+    
     
     for ANC in Genome_Wide_Ancestries:
         
@@ -92,5 +98,7 @@ for IND in Individuals_to_Length_Distributions.keys():
         
         
         Output_File.write(F"\t{MEAN_LENGTH},{VARIANCE_IN_LENGTH}")
+        Output_File_2.write(F"\t{','.join([str(x) for x in LENGTHS])}")
     
     Output_File.write("\n")
+    Output_File_2.write("\n")

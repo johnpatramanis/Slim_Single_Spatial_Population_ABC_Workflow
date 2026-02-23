@@ -1,5 +1,5 @@
 ##### Takes input of "Find_Admixture.py"
-##### Run like this """ python Count_Total_Ancenstry_For_Chromosome.py ./Simulation_Runs/Simulation_0/Ancestries ./Simulation_Runs/Simulation_0/Tracks"""
+##### Run like this """python Python_Scripts/Count_Total_Ancenstry_For_Chromosome.py ./Simulation_Runs/Simulation_0/Ancestries ./Simulation_Runs/Simulation_0/Tracks"""
 
 import sys
 import os

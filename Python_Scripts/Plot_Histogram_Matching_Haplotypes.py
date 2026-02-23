@@ -1,5 +1,5 @@
 ##### Takes input of "Find_Admixture.py"
-##### Run like this """ python Plot_Histogram_Matching_Haplotypes.py ./Simulation_Runs/Simulation_0/Diversity_Metrics ./Simulation_Runs/Simulation_0/Ancestry_Plots """
+##### Run like this """ python Python_Scripts/Plot_Histogram_Matching_Haplotypes.py ./Simulation_Runs/Simulation_0/Diversity_Metrics ./Simulation_Runs/Simulation_0/Ancestry_Plots """
 
 ### Import Packages
 import sys
@@ -151,26 +151,36 @@ for ANC in sorted(ANCESTRIES.keys()):
             
             if ( ( ID1 == ID_NAME ) or ( ID2 == ID_NAME ) ) and (DATA_HERE not in SORTED_BY_LOCATION_DATA):
                 
+                
+                
+                ### Find location of other individual
+                if ID1 == ID_NAME:
+                    ID_ALT = ID2
+                
+                if ID2 == ID_NAME:
+                    ID_ALT = ID1
+                
+                for ZZ in Individual_Location:
+                    if ID_ALT == ZZ[0]:
+                        LOCATION_V2 = ZZ[1]
+                
+                
+                ### For second sorting
+                ID_NAME_LIST.append([DATA_HERE,LOCATION_V2,LOCATION])
+                
                 SORTED_BY_LOCATION_DATA.append(DATA_HERE)
                 
                 
                 
                 
-                
-                
-                ### For second sorting
-                ID_NAME_LIST.append([DATA_HERE,LOCATION])
-                
-                
-                
-                
-                
         #### Second sorting needed for Y axis
-
+        
         ID_NAME_LIST = sorted(ID_NAME_LIST, key=lambda x: x[1])
-
+        # print([x[1:3] for x in ID_NAME_LIST])
+        
         for TEMP in ID_NAME_LIST:
             RE_SORTED_BY_LOCATION_DATA.append(TEMP[0])
+            # print(LOCATION,LOCATION_V2)
         
         
         
@@ -190,11 +200,9 @@ for ANC in sorted(ANCESTRIES.keys()):
             Sim_matrix[j,i] = Sim_matrix[i,j]
             counter+=1
 
-    
-
-    
+        
     plt.imshow(Sim_matrix, cmap='hot', interpolation='nearest')
-    plt.show()    
+    plt.savefig(F"{Output_Folder}/Ancestry_{ANC}_Similarity_Heatmap.pdf")
     
     
     

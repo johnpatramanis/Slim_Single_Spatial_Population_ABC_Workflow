@@ -120,7 +120,6 @@ for File in os.listdir(F"{Folder}"):
             
             
             
-            
             #### Returns two lists of tree lengths
             Matching_Trees, Missmatching_Trees = Return_Matching_Trees(Candidate_1 ,Candidate_2 ,Tree_Lengths ,ancestry)
             
