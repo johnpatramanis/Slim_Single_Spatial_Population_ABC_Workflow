@@ -18,13 +18,14 @@ initialize() {
 		"SM", 0.5,         // sigma_M, mate choice distance //// Used to create an interaction, which is then used to pick a candidate for mating
 		"K", 5,            // carrying capacity per unit area //// Used to calcualte RHO= FECUN / ((1 + FECUN) * K)) //// Used for initial population number of individuals = K * WIDTH * HEIGHT
 		"LIFETIME", 4,     // average life span ////
-		"WIDTH", 50.0,     // width of the simulated area ////
-		"HEIGHT", 10.0,    // height of the simulated area ////
+		"WIDTH", 100.0,     // width of the simulated area ////
+		"HEIGHT", 20.0,    // height of the simulated area ////
 		"RUNTIME", 10000,    // total number of ticks to run the simulation for ////
 		"REMOVE_BOUNDARIES", 100, // Timeline of Simulation,
-		"KILL_POP_TWO", 700, // Timeline of Simulation,
+		"KILL_POP_TWO", 1350, // Timeline of Simulation,
 		"MU", 0.00000,            // mutation rate ////
-		"Genome_Architecture_Path", "../../Human_Genome_Architecture/"  // generic path for chromosome files ///
+		"Genome_Architecture_Path", "../../Human_Genome_Architecture/",  // generic path for chromosome files ///
+		"SPECIESISM", 0.5
 		);	
 	
 	// Set up parameters with a user-defined function
@@ -55,7 +56,7 @@ initialize() {
 		170805979, 159345973, 145138636, 138394717, 133797422, 135086622,
 		133275309, 114364328, 107043718, 101991189, 90338345, 83257441,
 		80373285, 58617616, 64444167, 46709983, 50818468, 156040895,
-		57227415,1656);
+		57227415,16560);
 	
 	///
 	
@@ -143,12 +144,12 @@ initialize() {
 	
 	/// Set up pop1
 	sim.addSubpop("p1", asInteger(500));  ////// add Initial population 
-	p1.setSpatialBounds(c(0, 0, WIDTH/10, HEIGHT/2));   /////// Add spatial bounds for population 1
+	p1.setSpatialBounds(c(0, 0, 15, 10));   /////// Add spatial bounds for population 1
 	p1.individuals.setSpatialPosition(p1.pointUniform(p1.individualCount));  ///// Place Individuals from pop1 into spatial boundaries of population 1
 	
 	/// Set up pop2
 	sim.addSubpop("p2", asInteger(500));  ////// add Initial population 
-	p2.setSpatialBounds(c( (WIDTH-(WIDTH/10)), (HEIGHT-(HEIGHT/2)), WIDTH, HEIGHT));   /////// Add spatial bounds for population 1
+	p2.setSpatialBounds(c( 40, 10, 55, 20));   /////// Add spatial bounds for population 1
 	p2.individuals.setSpatialPosition(p2.pointUniform(p2.individualCount));  ///// Place Individuals from pop1 
 	
 	//////
@@ -161,13 +162,12 @@ initialize() {
 
 
 REMOVE_BOUNDARIES first() {
-	p1.setSpatialBounds(c(0, 0, 100, 25)); //// min_width,min_height,max_width,max_height
+	p1.setSpatialBounds(c(0, 0, 100, 20)); //// min_width,min_height,max_width,max_height
 	///p2.setSpatialBounds(c(0, 0, 100, 25)); //// min_width,min_height,max_width,max_height
 }
 
 KILL_POP_TWO first(){
 sim.killIndividuals(p2.individuals);
-p2.setSpatialBounds(c(15, 15, 20, 20));	
 }
 
 first() {
@@ -189,11 +189,21 @@ reproduction() { ///// Works for both populations
 	
 		mate1 = i2.drawByStrength(individual, 1, p1); /// Draw a good candidate from pop 1
 		mate2 = i2.drawByStrength(individual, 1, p2); /// Draw a good candidate from pop 2
-		possible_mates=c(mate1,mate2); /// Combine them into a list
-	
-		if (possible_mates.size()){
-			mate = sample(possible_mates,1); /// If list not empty, pick randomly
+		
+		//// set up list of two possible candidates, based on the population the individual belongs to
+		if (individual.subpopulation == p1){
+		possible_mates=c(mate1,mate2); /// Combine them into a list, with p1 canddate firts
 		}
+		if (individual.subpopulation == p2){
+		possible_mates=c(mate2,mate1); /// Combine them into a list, with p2 candidate firts		
+		}
+	
+	
+		if (possible_mates.size()>1){
+			choice_of_species = c(SPECIESISM,1 - SPECIESISM);
+			mate = sample(possible_mates, 1, weights = choice_of_species); /// If list not empty, pick randomly
+		}
+	
 	}	
 	
 	
@@ -235,8 +245,8 @@ early() {
 	
 	competition_p1 = i1.localPopulationDensity(inds_p1);
 	competition_p2 = i3.localPopulationDensity(inds_p2);
-	competition_p1 = competition_p1*0.5 + i3.localPopulationDensity(inds_p1)*0.5;
-	competition_p2 = competition_p2*0.5 + i1.localPopulationDensity(inds_p2)*0.5;
+	competition_p1 = competition_p1 + i3.localPopulationDensity(inds_p1);
+	competition_p2 = competition_p2 + i1.localPopulationDensity(inds_p2);
 	
 	GEN = sim.cycle;
 	
