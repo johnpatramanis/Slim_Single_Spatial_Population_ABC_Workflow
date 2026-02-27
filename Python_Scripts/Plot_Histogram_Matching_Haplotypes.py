@@ -108,7 +108,6 @@ for LINE in Individuals_File:
 Individual_Location = sorted(Individual_Location, key = lambda x: x[1])
 
 
-print(Individual_Location)
 
 
 
@@ -160,8 +159,11 @@ for ANC in sorted(ANCESTRIES.keys()):
                 if ID2 == ID_NAME:
                     ID_ALT = ID1
                 
+                ### Cycle through individuals again
                 for ZZ in Individual_Location:
+                    #### identify location of 2nd individual in the pair
                     if ID_ALT == ZZ[0]:
+                        ### Record their X location
                         LOCATION_V2 = ZZ[1]
                 
                 

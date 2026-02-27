@@ -138,3 +138,4 @@ for Chromosome in sorted(CHR_to_Hapl.keys()):
     plt.yticks(ticks=[ x for x in ID_to_Number.values()], labels= [ x for x in ID_to_Number.keys()], rotation = 20, size = 2)
     
     plt.savefig(F"{Output_Folder}/Painted_Chromosome_{Chromosome}.pdf")
+    plt.close()
