@@ -12,12 +12,6 @@ import sys
 
 Folder = sys.argv[1]
 
-Number_of_Samples = 50
-
-if len(sys.argv) >= 3:
-    
-    Number_of_Samples = int(sys.argv[2])
-
 Sampled_Individuals_Last_Gen = [] ### This list will have the SlimIDs of the individuals from the last generation that have been sampled
 
 
@@ -29,13 +23,11 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
     ts = tskit.load(F"{Folder}/Spatial_Simulations_SLim.trees/{tree_file}") ### Load the chromosomal tree sequence here
     
     ##### Find out how many ticks the simulation run for
-    times = np.unique(ts.tables.nodes.time)
-    oldest_time = times[-1]
+    times = sorted(set([ float(X.time) for X in ts.nodes()]))
+    oldest_time = max(times)
     
     ##### Select Individuals from Last generation
-    ids_at_zero = np.where(ts.tables.nodes.time == 0)[0]
-    Last_Gen = [ts.node(i) for i in ids_at_zero] ### Subsample only to last generation, avoid empty genomes
-    
+    Last_Gen = [ X for X in ts.nodes() if ( X.time == 0 )] ### Subsample to last generation, avoid empty genomes
     ###### Note! is_vacant == 0 are males haplosomes (half genome) with the Y and MT, is_vacant==56 are males haplosomes without Y and MT, and is_vacant==16 are femae haplosomes with MT and is_vacant==48 are female haplosomes without MT
     
     
@@ -47,7 +39,16 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
     ##### if sampling has already occured once, use the IDs, so the same individuals are sampled for the different chromosomes
     if Sampled_Individuals_Last_Gen != []:
         #### Set up for picking
-        pass
+        Last_Gen = [ X for X in ts.nodes() if ( X.time == oldest_time )]
+        Last_Gen_SubSample = []
+        
+        #### Cycle through ID's
+        for Indiv_ID in Sampled_Individuals_Last_Gen:
+            Node_IDs = ts.individual(Indiv_ID).nodes
+            Last_Gen_SubSample.append(ts.node(Node_IDs[0]))
+            Last_Gen_SubSample.append(ts.node(Node_IDs[1]))
+            
+        
         
     ##    
     #### If sampling has not occured already for another chromosome, do it here
@@ -56,7 +57,7 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
             Last_Gen = [ X for X in ts.nodes() if ( X.time == oldest_time )]
 
           
-        Sample_Size = min(Number_of_Samples,len(Last_Gen)) #### Can Sample up to Number_of_Samples (a given integer) individuals, unless there are less than that remaining 
+        Sample_Size = min(50,len(Last_Gen)) #### Can Sample up to 50 individuals, unless there are less than that remaining 
         
         Last_Gen_SubSample = []
         Numbers = [x for x in range(0,len(Last_Gen))] ### Indexes to pick from
@@ -75,19 +76,14 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
 
     
     
+    
+    
+    
+    
     #### Select Individuals from First Slim Generation
-    ids_at_oldest_time = np.where(ts.tables.nodes.time == oldest_time)[0]
-    First_Gen = [ts.node(i) for i in ids_at_oldest_time] ### Subsample to last generation, avoid empty genomes
-    
-    
-    ### Dictionary linking First Gen Inds to their population
-    First_gen_lookup = {node.id: node.population for node in First_Gen}
-    
+    First_Gen = [ X for X in ts.nodes() if ( X.time == oldest_time )] ### Subsample to last generation, avoid empty genomes
     ###### Note! is_vacant == 0 are males haplosomes (half genome) with the Y and MT, is_vacant==56 are males haplosomes without Y and MT, and is_vacant==16 are femae haplosomes with MT and is_vacant==48 are female haplosomes without MT
-    #### List with true or false for vacancy of every node in this chromosome
-    Is_vacant_list = [pyslim.node_is_vacant(ts, IND) for IND in Last_Gen_SubSample]
-
-    ### List of lists, here every individual has an entry, with their ancestry for every tree
+    
     Last_Gen_Ancestry_Matrix = [[] for i in Last_Gen_SubSample ]
     Tree_Intervals = []
     
@@ -97,30 +93,18 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
         
         for indiv_index in range(0,len(Last_Gen_SubSample)): ### For each Individual in the final generation (present)
             
-            IND = Last_Gen_SubSample[indiv_index] ### get individual
+            IND = Last_Gen_SubSample[indiv_index]
 
-            if Is_vacant_list[indiv_index]: ### Ignore vacant nodes (e.g. mitochondrial, Y, X chromosomes)
+            if(pyslim.node_is_vacant(ts, IND)): ### Ignore vacant nodes (e.g. mitochondrial, Y, X chromosomes)
                 continue
-            
-            Curr_node = IND.id
-            Ancestry = ''
-            
-            
-            ###### cycle through parents of this individuals, going up the tree, getting the nodeID until you encounter "-1", which means you are at root
-            while Curr_node != -1:
-                
-                ###### if this node belongs to 1st generation, bingo, get the ancestry of that parent
-                if Curr_node in First_gen_lookup:
-                    Ancestry = First_gen_lookup[Curr_node]
-                    break
-                ### otherwise keep going up the parentage    
-                Curr_node = tree_here.parent(Curr_node)
-            
-            
-            # Append the result if an ancestor was found
-            if Ancestry != '':
-                Last_Gen_Ancestry_Matrix[indiv_index].append(str(Ancestry))
 
+            Anc = [anc for anc in First_Gen if ( tree_here.is_descendant(IND.id, anc.id) == True)] ### Find Ancestor of individual from first generation 
+            Ancestor = Anc[0]
+            Ancestry = Ancestor.population ### What pop did ancestor belong to?
+            
+            
+            
+            Last_Gen_Ancestry_Matrix[indiv_index].append(str(Ancestry))
     
     print(F"Simulation in {Folder}, {Chromosome_Name}, {(indiv_index+1)/2} Individuals had their ancestry assigned! ")        
             
