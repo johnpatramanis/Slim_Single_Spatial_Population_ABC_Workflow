@@ -35,7 +35,6 @@ for Line in File:
     Ancestry = Line[1]
     ID1 = Line[2]
     ID2 = Line[3]
-    ID2 = Line[3]
     Similarity = float(Line[8])
     
     
@@ -188,7 +187,7 @@ for ANC in sorted(ANCESTRIES.keys()):
         
     
     Max_Dim = len(SAMPLES)
-    Sim_matrix = np.zeros((Max_Dim,Max_Dim))
+    Sim_matrix = np.ones((Max_Dim,Max_Dim))
 
 
 

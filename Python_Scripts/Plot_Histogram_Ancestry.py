@@ -9,6 +9,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
+######
+Size_of_Box = 5
+if len(sys.argv) >= 4:
+    Size_of_Box = int(sys.argv[3])
 
 
 ########## Load and organise data
@@ -131,10 +135,10 @@ max_width = round(max(Individual_Location, key = lambda x: x[1])[1])### maximum 
 max_height = round(max(Individual_Location, key = lambda x: x[2])[2]) ### maximum Y axis position, rounded
 
 ## add a bit until its divisable by 5 (arbitary, but makes plots nicer)
-while max_height%5 !=0:
+while max_height % Size_of_Box !=0:
     max_height+=1
 
-while max_width%5 !=0:
+while max_width % Size_of_Box !=0:
     max_width+=1
 
 print(F"Maximum width for this space is: {max_width} and maximum height is: {max_height}\n")
@@ -143,8 +147,8 @@ print(F"Maximum width for this space is: {max_width} and maximum height is: {max
 
 ##### Create spatial boxes of 5x5
 
-N_X_Boxes = int(max_width/5) ## Number of bins/boxes in X axis
-N_Y_Boxes = int(max_height/5) ## Number of bins/boxes in Y axis
+N_X_Boxes = int(max_width/Size_of_Box) ## Number of bins/boxes in X axis
+N_Y_Boxes = int(max_height/Size_of_Box) ## Number of bins/boxes in Y axis
 N_Boxes = N_X_Boxes * N_Y_Boxes ## Number of total bins/boxes
 
 ##### Seperate all individuals into spatial boxes of 5x5
@@ -152,8 +156,8 @@ N_Boxes = N_X_Boxes * N_Y_Boxes ## Number of total bins/boxes
 BOXES = []
 
     
-for X_DIM in range(5,max_width+5,5):
-    for Y_DIM in range(5,max_height+5,5):
+for X_DIM in range(Size_of_Box,max_width + Size_of_Box, Size_of_Box):
+    for Y_DIM in range(Size_of_Box,max_height + Size_of_Box, Size_of_Box):
         
         BOX_HERE = [ ]
         
@@ -164,7 +168,7 @@ for X_DIM in range(5,max_width+5,5):
             
             HAPS = [x for x in Individuals_to_Ancestries.keys() if (IND[0] == x.split('_')[1] ) ] ## haplotypes of individual
             
-            if (IND_X >= X_DIM-5) and (IND_Y >= Y_DIM-5) and (IND_X < X_DIM) and (IND_Y < Y_DIM):
+            if (IND_X >= X_DIM - Size_of_Box) and (IND_Y >= Y_DIM - Size_of_Box) and (IND_X < X_DIM) and (IND_Y < Y_DIM):
                 
                 for HAP in HAPS:
                     BOX_HERE.append(Individuals_to_Ancestries[HAP]) ### ancestry proportions of each haplotype
@@ -191,18 +195,18 @@ for ANCESTRY_IN_QUESTION in range(0,len(Ancestries)):
     counter = 0
     
     
-    for X_DIM in range(5,max_width+5,5):
+    for X_DIM in range(Size_of_Box ,max_width + Size_of_Box, Size_of_Box):
         X_ROW = []
         
-        for Y_DIM in range(5,max_height+5,5):
+        for Y_DIM in range(Size_of_Box ,max_height + Size_of_Box, Size_of_Box):
             
             X_ROW.append(ANCESTRY_IN_BOXES[counter])
             counter += 1
             
         Z.append(X_ROW)    
         
-    FOR_PLOTTING_X = [ X_DIM - 2.5 for X_DIM in range(0,max_width+5,5)  ]
-    FOR_PLOTTING_Y = [ Y_DIM - 2.5 for Y_DIM in range(0,max_height+5,5) ]
+    FOR_PLOTTING_X = [ X_DIM - Size_of_Box/2 for X_DIM in range(0, max_width + Size_of_Box, Size_of_Box)  ]
+    FOR_PLOTTING_Y = [ Y_DIM - Size_of_Box/2 for Y_DIM in range(0, max_height + Size_of_Box, Size_of_Box) ]
 
     
     

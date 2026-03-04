@@ -49,12 +49,7 @@ Output_Folder = sys.argv[2]
 Output_File = open(f"{Output_Folder}/Diversity_Metrics/Ancestry_Sharing.txt", "w")
 Output_File.write('Chromosome\tAncestry\tID_1\tID_2\tTotal_length_of_matching_ancestry\tTotal_length_of_missmatching_ancestry\tTotal_length_at_least_one\tTotal_length_of_no_ancestry\tPattern_Matching_Metric\n')
 
-Chromosome_to_Ancestries = {}
-Chromosomes = []
-
 Number_of_Maximum_Ancestries_Between_Chromosomes = []
-Haplotypes_Genomewide_per_Indibidual = {}
-Possible_Ancestries = []
 
 
 #### For each chromosome
@@ -80,6 +75,7 @@ for File in os.listdir(F"{Folder}"):
     #### For each individual get their ancestry for each tree
     All_Individuals = []
     All_Individuals_ID = []
+    
     for line in File:
         
         Ancestry_Individual = line.strip().split(":")[1]
@@ -91,7 +87,7 @@ for File in os.listdir(F"{Folder}"):
             All_Individuals_ID.append(ID_of_Individual)
 
     
-
+    
     ### Find out how many ancestries exist in total in this chromosome
     Ancestries = []
 
@@ -147,5 +143,3 @@ for File in os.listdir(F"{Folder}"):
             
             To_Print = F"{Chromosome}\t{ancestry}\t{ID_1}\t{ID_2}\t{Total_Matching}\t{Total_MissMatching}\t{Total_Covering}\t{Total_NoAncestry}\t{Metric}\n"
             Output_File.write(To_Print)
-
-            
