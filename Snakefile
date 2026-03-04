@@ -9,12 +9,12 @@ import os.path
 
 if (os.path.exists(os.path.join(os.getcwd(),'Plots')) == False):
     os.makedirs("Plots")
-    
+
 
 
 if (os.path.exists(os.path.join(os.getcwd(),'Simulation_Runs')) == False):
     os.makedirs("Simulation_Runs")
-        
+
 
 
 
@@ -62,7 +62,7 @@ for line in Parameters_File:
     Parameters[Name_of_Par] = Parameter_Values
 
 
-    
+
 
 Parameter_Names = [X for X in Parameters.keys()]
 
@@ -146,6 +146,11 @@ rule all:
         expand('Simulation_Runs/{sample}/Check_Files/Diversity_and_Ancestry_Plotted', sample = Simulations),
         expand('Simulation_Runs/{sample}/Check_Files/Diversity_Calculated', sample = Simulations),
         expand('Simulation_Runs/{sample}/Check_Files/Matching_Ancestry_Calculated', sample = Simulations),
+        expand('Simulation_Runs/{sample}/Check_Files/Matching_Ancestry_Plotted', sample = Simulations),
+        expand('Simulation_Runs/{sample}/Check_Files/Matching_Regional_Ancestry_Plotted', sample = Simulations),
+        expand('Simulation_Runs/{sample}/Check_Files/Introgression_Lengths_Calculated', sample = Simulations),
+        expand('Simulation_Runs/{sample}/Check_Files/Introgression_Lengths_Plotted', sample = Simulations),
+        
 
 
 
@@ -209,7 +214,7 @@ rule Run_Slim_Simulations:
         shell(F"cd Simulation_Runs/{wildcards.sample}/; slim Slim_Script.slim; cd ../..;")
 
 
-       
+
 def Which_Simulations_Have_Not_Failed():
     Simulation_Files = []
     
@@ -219,8 +224,8 @@ def Which_Simulations_Have_Not_Failed():
             files.append("{sample}_ruleTwo".format(sample=sample))
             
     return Simulation_Files
-        
-        
+
+
 
 ######## Rule to Assign Ancestry to each individual from each chromosome
 ##
@@ -276,13 +281,13 @@ rule Calculate_Overall_Track_Length:
         os.makedirs(F"Simulation_Runs/{wildcards.sample}/Tracks") ### Create folder for simulation
         
         #### Python script to calculate total track length for each ancestry and each haplotype
-        shell(F"python3 ./Python_Scripts/Count_Total_Ancenstry_For_Chromosome.py ./Simulation_Runs/{wildcards.sample}/Ancestries ./Simulation_Runs/{wildcards.sample}/Tracks") ### Python script to generate ancestry files
+        shell(F"python3 ./Python_Scripts/Count_Total_Ancenstry_For_Chromosome.py ./Simulation_Runs/{wildcards.sample}/Ancestries ./Simulation_Runs/{wildcards.sample}/Tracks 100") ### Python script to generate ancestry files
       
         #### Checkfile
         shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Tracks_Calculated")
-        
-        
-        
+
+
+
 rule Calculate_Long_Tracks:
     input:
         'Simulation_Runs/{sample}/Check_Files/Ancestry_Assigned'
@@ -301,11 +306,10 @@ rule Calculate_Long_Tracks:
       
         #### Checkfile
         shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Long_Tracks_Calculated")
-        
-        
-        
-        
-        
+
+
+
+
 rule Plot_Long_Tracks:
     input:
         'Simulation_Runs/{sample}/Check_Files/Long_Tracks_Calculated',
@@ -325,35 +329,12 @@ rule Plot_Long_Tracks:
       
         #### Checkfile
         shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Long_Tracks_Plotted")
-        
-
-
-rule Plot_Ancestry_and_Diversity_Plots:
-    input:
-        'Simulation_Runs/{sample}/Check_Files/Long_Tracks_Calculated',
-        'Simulation_Runs/{sample}/Check_Files/Tracks_Calculated',
-        'Simulation_Runs/{sample}/Check_Files/Diversity_Calculated'
-    output:
-        'Simulation_Runs/{sample}/Check_Files/Diversity_and_Ancestry_Plotted'
-    run:
-        
-        #### Make sure file exist and is new
-        if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/Ancestry_Plots")) == True): ### Check if folder exists delete if it does
-            shutil.rmtree(F"Simulation_Runs/{wildcards.sample}/Ancestry_Plots")
-            
-        os.makedirs(F"Simulation_Runs/{wildcards.sample}/Ancestry_Plots") ### Create folder for simulation
-        
-        #### Python script to plot chromosomes with ancestry
-        shell(F"python3 ./Python_Scripts/Plot_Histogram_Ancestry.py ./Simulation_Runs/{wildcards.sample}/Tracks ./Simulation_Runs/{wildcards.sample}/Ancestry_Plots") ### Python script to plot barplots and histograms of diversity and ancestry files
-      
-        #### Checkfile
-        shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Diversity_and_Ancestry_Plotted")
-        
 
 
 
 
-        
+
+
 rule Coalesce_Calc_Diversity:
     input:
         'Simulation_Runs/{sample}/Check_Files/Ancestry_Assigned'
@@ -381,16 +362,38 @@ rule Coalesce_Calc_Diversity:
 
         #### Checkfile
         shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Diversity_Calculated")
+
+
+
+
+rule Plot_Ancestry_and_Diversity_Plots:
+    input:
+        'Simulation_Runs/{sample}/Check_Files/Long_Tracks_Calculated',
+        'Simulation_Runs/{sample}/Check_Files/Tracks_Calculated',
+        'Simulation_Runs/{sample}/Check_Files/Diversity_Calculated'
+    output:
+        'Simulation_Runs/{sample}/Check_Files/Diversity_and_Ancestry_Plotted'
+    run:
         
+        #### Make sure file exist and is new
+        if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/Ancestry_Plots")) == True): ### Check if folder exists delete if it does
+            shutil.rmtree(F"Simulation_Runs/{wildcards.sample}/Ancestry_Plots")
+            
+        os.makedirs(F"Simulation_Runs/{wildcards.sample}/Ancestry_Plots") ### Create folder for simulation
         
-        
-        
-        
+        #### Python script to plot chromosomes with ancestry
+        shell(F"python3 ./Python_Scripts/Plot_Histogram_Ancestry.py ./Simulation_Runs/{wildcards.sample}/Tracks ./Simulation_Runs/{wildcards.sample}/Ancestry_Plots") ### Python script to plot barplots and histograms of diversity and ancestry files
+      
+        #### Checkfile
+        shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Diversity_and_Ancestry_Plotted")
+
+
+
+
 rule Calc_Matching_Ancestry:
     input:
-        'Simulation_Runs/{sample}/Check_Files/Diversity_Calculated',
-        'Simulation_Runs/{sample}/Check_Files/Ancestry_Assigned'
-        
+        'Simulation_Runs/{sample}/Check_Files/Ancestry_Assigned',
+        'Simulation_Runs/{sample}/Check_Files/Diversity_Calculated'
     output:
         'Simulation_Runs/{sample}/Check_Files/Matching_Ancestry_Calculated'
     run:
@@ -404,3 +407,82 @@ rule Calc_Matching_Ancestry:
 
         #### Checkfile
         shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Matching_Ancestry_Calculated")
+
+
+
+rule Plot_Matching_Ancestry:
+    input:
+        'Simulation_Runs/{sample}/Check_Files/Matching_Ancestry_Calculated',
+        'Simulation_Runs/{sample}/Check_Files/Diversity_and_Ancestry_Plotted'
+        
+    output:
+        'Simulation_Runs/{sample}/Check_Files/Matching_Ancestry_Plotted'
+    run:
+        
+        if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/Slim_Simulation_Failed_To_Finish")) == False):
+            
+            #### Python script to recapitate trees, calculate diversity of samples
+            shell(F"python3 ./Python_Scripts/Plot_Histogram_Matching_Haplotypes.py ./Simulation_Runs/{wildcards.sample}/Diversity_Metrics ./Simulation_Runs/{wildcards.sample}/Ancestry_Plots")
+
+        #### Checkfile
+        shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Matching_Ancestry_Plotted")
+        
+
+rule Plot_Matching_Regional_Ancestry:
+    input:
+        'Simulation_Runs/{sample}/Check_Files/Matching_Ancestry_Calculated',
+        'Simulation_Runs/{sample}/Check_Files/Diversity_and_Ancestry_Plotted',
+        'Simulation_Runs/{sample}/Check_Files/Matching_Ancestry_Plotted'
+        
+    output:
+        'Simulation_Runs/{sample}/Check_Files/Matching_Regional_Ancestry_Plotted'
+    run:
+        
+        if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/Slim_Simulation_Failed_To_Finish")) == False):
+            
+            #### Python script to recapitate trees, calculate diversity of samples
+            shell(F"python3 ./Python_Scripts/Plot_Histogram_Matching_Haplotypes_Regions.py ./Simulation_Runs/{wildcards.sample}/Diversity_Metrics ./Simulation_Runs/{wildcards.sample}/Ancestry_Plots 5")
+            shell(F"python3 ./Python_Scripts/Plot_Histogram_Matching_Haplotypes_Regions.py ./Simulation_Runs/{wildcards.sample}/Diversity_Metrics ./Simulation_Runs/{wildcards.sample}/Ancestry_Plots 10")
+            shell(F"python3 ./Python_Scripts/Plot_Histogram_Matching_Haplotypes_Regions.py ./Simulation_Runs/{wildcards.sample}/Diversity_Metrics ./Simulation_Runs/{wildcards.sample}/Ancestry_Plots 20")
+
+        #### Checkfile
+        shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Matching_Regional_Ancestry_Plotted")
+                  
+
+rule Calculate_Lengths_of_Introgressed_Segments:
+    input:
+        'Simulation_Runs/{sample}/Check_Files/Matching_Ancestry_Calculated',
+        'Simulation_Runs/{sample}/Check_Files/Diversity_and_Ancestry_Plotted',
+        'Simulation_Runs/{sample}/Check_Files/Long_Tracks_Calculated'
+    output:
+        'Simulation_Runs/{sample}/Check_Files/Introgression_Lengths_Calculated'
+    run:
+        
+        if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/Slim_Simulation_Failed_To_Finish")) == False):
+            
+            #### Python script to recapitate trees, calculate diversity of samples
+            shell(F"python3 ./Python_Scripts/Calculate_Ancestry_Length_Distribution.py ./Simulation_Runs/{wildcards.sample}/Haplotypes/Whole_Genome.total_haplotypes ./Simulation_Runs/{wildcards.sample}/Diversity_Metrics ")
+
+        #### Checkfile
+        shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Introgression_Lengths_Calculated")
+        
+        
+        
+
+rule Plot_Lengths_of_Introgressed_Segments:
+    input:
+        'Simulation_Runs/{sample}/Check_Files/Matching_Ancestry_Calculated',
+        'Simulation_Runs/{sample}/Check_Files/Diversity_and_Ancestry_Plotted',
+        'Simulation_Runs/{sample}/Check_Files/Long_Tracks_Calculated',
+        'Simulation_Runs/{sample}/Check_Files/Introgression_Lengths_Calculated'
+    output:
+        'Simulation_Runs/{sample}/Check_Files/Introgression_Lengths_Plotted'
+    run:
+        
+        if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/Slim_Simulation_Failed_To_Finish")) == False):
+            
+            #### Python script to recapitate trees, calculate diversity of samples
+            shell(F"python3 ./Python_Scripts/Plot_Ancestry_Lengths.py ./Simulation_Runs/{wildcards.sample}/Haplotypes/Diversity_Metrics ./Simulation_Runs/{wildcards.sample}/Ancestry_Plots ")
+
+        #### Checkfile
+        shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Introgression_Lengths_Plotted")
