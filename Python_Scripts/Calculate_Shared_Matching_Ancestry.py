@@ -1,4 +1,4 @@
-########### python Python_Scripts/Calculate_Shared_Matching_Ancestry.py ./Simulation_Runs/Simulation_0/Ancestries ./Simulation_Runs/Simulation_0/
+########### python Python_Scripts/Calculate_Shared_Matching_Ancestry.py ./Simulation_Runs/Simulation_0/Composite_Individuals/Box_Size_10 ./Simulation_Runs/Simulation_0/Composite_Individuals/Diversity_Metrics
 import sys
 import os
 from itertools import combinations

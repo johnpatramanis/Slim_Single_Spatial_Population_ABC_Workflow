@@ -201,7 +201,9 @@ for ANC in sorted(ANCESTRIES.keys()):
             Sim_matrix[j,i] = Sim_matrix[i,j]
             counter+=1
 
-        
+    
+
+    
     plt.imshow(Sim_matrix, cmap='hot', interpolation='nearest')
     plt.savefig(F"{Output_Folder}/Ancestry_{ANC}_Similarity_Heatmap.pdf")
     
