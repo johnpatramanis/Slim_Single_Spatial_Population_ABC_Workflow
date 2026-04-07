@@ -150,6 +150,8 @@ rule all:
         expand('Simulation_Runs/{sample}/Check_Files/Matching_Regional_Ancestry_Plotted', sample = Simulations),
         expand('Simulation_Runs/{sample}/Check_Files/Introgression_Lengths_Calculated', sample = Simulations),
         expand('Simulation_Runs/{sample}/Check_Files/Introgression_Lengths_Plotted', sample = Simulations),
+        expand('Simulation_Runs/{sample}/Check_Files/Composite_Individuals_Matching_Ancestry_Plotted', sample = Simulations),
+        expand('Simulation_Runs/{sample}/Check_Files/Composite_Individuals_Coverage_of_Ancestry_Plotted', sample = Simulations),
         
 
 
@@ -381,7 +383,7 @@ rule Plot_Ancestry_and_Diversity_Plots:
             
         os.makedirs(F"Simulation_Runs/{wildcards.sample}/Ancestry_Plots") ### Create folder for simulation
         
-        #### Python script to plot chromosomes with ancestry
+        #### Python script to plot a barplot (not a histogram) of all ancestries for every individual, sorted left to right, based on the position of the individuals on the X axis
         shell(F"python3 ./Python_Scripts/Plot_Histogram_Ancestry.py ./Simulation_Runs/{wildcards.sample}/Tracks ./Simulation_Runs/{wildcards.sample}/Ancestry_Plots") ### Python script to plot barplots and histograms of diversity and ancestry files
       
         #### Checkfile
@@ -402,7 +404,7 @@ rule Calc_Matching_Ancestry:
         
         if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/Slim_Simulation_Failed_To_Finish")) == False):
             
-            #### Python script to recapitate trees, calculate diversity of samples
+            #### Python script to calculate the overlap (same ancestry in the same location of the genome) of an ancestry between every pair of individuals and for every ancestry
             shell(F"python3 ./Python_Scripts/Calculate_Shared_Matching_Ancestry.py ./Simulation_Runs/{wildcards.sample}/Ancestries ./Simulation_Runs/{wildcards.sample}/")
 
         #### Checkfile
@@ -421,7 +423,7 @@ rule Plot_Matching_Ancestry:
         
         if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/Slim_Simulation_Failed_To_Finish")) == False):
             
-            #### Python script to recapitate trees, calculate diversity of samples
+            #### Python script to plot the overlap of an ancestry between all pairs of sampled individuals, sorted by the X axis
             shell(F"python3 ./Python_Scripts/Plot_Histogram_Matching_Haplotypes.py ./Simulation_Runs/{wildcards.sample}/Diversity_Metrics ./Simulation_Runs/{wildcards.sample}/Ancestry_Plots")
 
         #### Checkfile
@@ -440,7 +442,7 @@ rule Plot_Matching_Regional_Ancestry:
         
         if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/Slim_Simulation_Failed_To_Finish")) == False):
             
-            #### Python script to recapitate trees, calculate diversity of samples
+            #### Python script to plot average overlap of an ancestry between all pairs of groups, sorted by the X axis
             shell(F"python3 ./Python_Scripts/Plot_Histogram_Matching_Haplotypes_Regions.py ./Simulation_Runs/{wildcards.sample}/Diversity_Metrics ./Simulation_Runs/{wildcards.sample}/Ancestry_Plots 5")
             shell(F"python3 ./Python_Scripts/Plot_Histogram_Matching_Haplotypes_Regions.py ./Simulation_Runs/{wildcards.sample}/Diversity_Metrics ./Simulation_Runs/{wildcards.sample}/Ancestry_Plots 10")
             shell(F"python3 ./Python_Scripts/Plot_Histogram_Matching_Haplotypes_Regions.py ./Simulation_Runs/{wildcards.sample}/Diversity_Metrics ./Simulation_Runs/{wildcards.sample}/Ancestry_Plots 20")
@@ -460,7 +462,7 @@ rule Calculate_Lengths_of_Introgressed_Segments:
         
         if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/Slim_Simulation_Failed_To_Finish")) == False):
             
-            #### Python script to recapitate trees, calculate diversity of samples
+            #### Python script to collect the ancestry lengths (haplotypes), for each individual and for each ancestry
             shell(F"python3 ./Python_Scripts/Calculate_Ancestry_Length_Distribution.py ./Simulation_Runs/{wildcards.sample}/Haplotypes/Whole_Genome.total_haplotypes ./Simulation_Runs/{wildcards.sample}/Diversity_Metrics ")
 
         #### Checkfile
@@ -481,8 +483,98 @@ rule Plot_Lengths_of_Introgressed_Segments:
         
         if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/Slim_Simulation_Failed_To_Finish")) == False):
             
-            #### Python script to recapitate trees, calculate diversity of samples
-            shell(F"python3 ./Python_Scripts/Plot_Ancestry_Lengths.py ./Simulation_Runs/{wildcards.sample}/Haplotypes/Diversity_Metrics ./Simulation_Runs/{wildcards.sample}/Ancestry_Plots ")
+            #### Python script to plot the ancestry lengths as boxplots, sorted by position on the X axis
+            shell(F"python3 ./Python_Scripts/Plot_Ancestry_Lengths.py ./Simulation_Runs/{wildcards.sample}/Diversity_Metrics ./Simulation_Runs/{wildcards.sample}/Ancestry_Plots ")
 
         #### Checkfile
         shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Introgression_Lengths_Plotted")
+        
+
+
+
+
+        
+rule Create_Composite_Individuals:
+    input:
+        'Simulation_Runs/{sample}/Check_Files/Matching_Ancestry_Calculated',
+        'Simulation_Runs/{sample}/Check_Files/Diversity_and_Ancestry_Plotted',
+        'Simulation_Runs/{sample}/Check_Files/Long_Tracks_Calculated',
+        'Simulation_Runs/{sample}/Check_Files/Introgression_Lengths_Calculated',
+        'Simulation_Runs/{sample}/Check_Files/Introgression_Lengths_Plotted'
+    output:
+        'Simulation_Runs/{sample}/Check_Files/Composite_Individuals_Created'
+    run:
+        
+        if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/Slim_Simulation_Failed_To_Finish")) == False):
+            
+            #### Python script to create one composite individual, containing the maximum ancestry coverage from a group of individuals (grouped togather based on space). Creates 1 composite individual from each ancestry and per box of defined size
+            shell(F"python3 ./Python_Scripts/Create_Composite_Individuals_of_an_Ancestry.py ./Simulation_Runs/{wildcards.sample}/Ancestries ./Simulation_Runs/{wildcards.sample}/Composite_Individuals 10 ")
+
+        #### Checkfile
+        shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Composite_Individuals_Created")
+        
+
+
+
+rule Calculate_Matching_Ancestry_Composite_Individuals:
+    input:
+        'Simulation_Runs/{sample}/Check_Files/Matching_Ancestry_Calculated',
+        'Simulation_Runs/{sample}/Check_Files/Diversity_and_Ancestry_Plotted',
+        'Simulation_Runs/{sample}/Check_Files/Long_Tracks_Calculated',
+        'Simulation_Runs/{sample}/Check_Files/Introgression_Lengths_Calculated',
+        'Simulation_Runs/{sample}/Check_Files/Composite_Individuals_Created'
+    output:
+        'Simulation_Runs/{sample}/Check_Files/Composite_Individuals_Matching_Ancestry_Calculated'
+    run:
+        
+        if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/Slim_Simulation_Failed_To_Finish")) == False):
+            
+            #### Python script to calculate how much matching overlap is between every pair of composite genomes, for a specific ancestry
+            shell(F"python3 ./Python_Scripts/Calculate_Shared_Matching_Ancestry_Composite_Individuals.py ./Simulation_Runs/{wildcards.sample}/Composite_Individuals/Box_Size_10 ./Simulation_Runs/{wildcards.sample}/Composite_Individuals/Diversity_Metrics ")
+
+        #### Checkfile
+        shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Composite_Individuals_Matching_Ancestry_Calculated")
+        
+        
+        
+rule Plot_Matching_Ancestry_Composite_Individuals:
+    input:
+        'Simulation_Runs/{sample}/Check_Files/Matching_Ancestry_Calculated',
+        'Simulation_Runs/{sample}/Check_Files/Diversity_and_Ancestry_Plotted',
+        'Simulation_Runs/{sample}/Check_Files/Long_Tracks_Calculated',
+        'Simulation_Runs/{sample}/Check_Files/Introgression_Lengths_Calculated',
+        'Simulation_Runs/{sample}/Check_Files/Composite_Individuals_Matching_Ancestry_Calculated'
+    output:
+        'Simulation_Runs/{sample}/Check_Files/Composite_Individuals_Matching_Ancestry_Plotted'
+    run:
+        
+        if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/Slim_Simulation_Failed_To_Finish")) == False):
+            
+            #### Python script to plot results of how much matching is between the composite genomes of the same ancestry
+            shell(F"python3 ./Python_Scripts/Plot_Histogram_Matching_Haplotypes_Composite_Individuals.py ./Simulation_Runs/{wildcards.sample}/Composite_Individuals/Diversity_Metrics ./Simulation_Runs/{wildcards.sample}/Ancestry_Plots ")
+
+        #### Checkfile
+        shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Composite_Individuals_Matching_Ancestry_Plotted")
+        
+        
+        
+        
+        
+rule Plot_Coverage_of_Ancestry_Composite_Individuals:
+    input:
+        'Simulation_Runs/{sample}/Check_Files/Matching_Ancestry_Calculated',
+        'Simulation_Runs/{sample}/Check_Files/Diversity_and_Ancestry_Plotted',
+        'Simulation_Runs/{sample}/Check_Files/Long_Tracks_Calculated',
+        'Simulation_Runs/{sample}/Check_Files/Introgression_Lengths_Calculated',
+        'Simulation_Runs/{sample}/Check_Files/Composite_Individuals_Matching_Ancestry_Plotted',
+    output:
+        'Simulation_Runs/{sample}/Check_Files/Composite_Individuals_Coverage_of_Ancestry_Plotted'
+    run:
+        
+        if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/Slim_Simulation_Failed_To_Finish")) == False):
+            
+            #### Python script to generate a plot. A spatial distribution of the completeness of coverage of a composite genome of a specific ancestry 
+            shell(F"python3 ./Python_Scripts/Plot_Composite_Ancestry_Spatial_Distribution.py ./Simulation_Runs/{wildcards.sample}/Composite_Individuals/Box_Size_10 ./Simulation_Runs/{wildcards.sample}/Ancestry_Plots ")
+
+        #### Checkfile
+        shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Composite_Individuals_Coverage_of_Ancestry_Plotted")
