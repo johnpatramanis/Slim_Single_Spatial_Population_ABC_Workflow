@@ -123,7 +123,8 @@ for ancestry in range(0,len(Genomewide_Ancestries)):
     plt.bar(BAR_ID, MEAN_LENGTH_BAR, color = Colours_to_ancestries[Genomewide_Ancestries[ancestry]], width = barWidth, edgecolor ='black', label = F'Ancestry_{ancestry}')
     
     
-plt.xlabel('ID of Sampled Genomes Sorted by Position on X-axis', fontweight ='bold', fontsize = 13) 
+plt.xlabel('ID of Sampled Genomes Sorted by Position on X-axis', fontweight ='bold', fontsize = 13)
+ax.tick_params("x", labelsize = 6 , rotation=45)
 plt.ylabel('Mean Length of Ancestry Segments', fontweight ='bold', fontsize = 13)
 plt.legend()
 plt.savefig(F"{Output_Folder}/Mean_Length_of_Ancestry_Barplot.pdf")
@@ -144,8 +145,9 @@ for ancestry in range(0,len(Genomewide_Ancestries)):
 
     plt.bar(BAR_ID, VAR_LENGTH_BAR, color = Colours_to_ancestries[Genomewide_Ancestries[ancestry]], width = barWidth, edgecolor ='black', label = F'Ancestry_{ancestry}')
     
-plt.xlabel('ID of Sampled Genomes Sorted by Position on X-axis', fontweight ='bold', fontsize = 13) 
-plt.ylabel('Mean Length of Ancestry Segments', fontweight ='bold', fontsize = 13)
+plt.xlabel('ID of Sampled Genomes Sorted by Position on X-axis', fontweight ='bold', fontsize = 13)
+ax.tick_params("x", labelsize = 6 , rotation=45) 
+plt.ylabel('Variance of Ancestry Segments', fontweight ='bold', fontsize = 13)
 plt.legend()
 plt.savefig(F"{Output_Folder}/Variance_of_Ancestry_Lengths_Barplot.pdf")   
 
@@ -204,8 +206,9 @@ for ancestry in range(0,len(Genomewide_Ancestries)):
     plt.setp(bp1["medians"], color="black")
     plt.setp(bp1["means"], color="black")
 
-    plt.xlabel('ID of Sampled Genomes Sorted by Position on X-axis', fontweight ='bold', fontsize = 11) 
-    plt.ylabel(F'Distribution of Lengths of Ancestry {Genomewide_Ancestries[ancestry]} Segments', fontweight ='bold', fontsize = 11)
+    plt.xlabel('ID of Sampled Genomes Sorted by Position on X-axis', fontweight ='bold', fontsize = 13)
+    ax.tick_params("x", labelsize = 6 , rotation=45)
+    plt.ylabel(F'Distribution of Lengths of Ancestry {Genomewide_Ancestries[ancestry]} Segments', fontweight ='bold', fontsize = 13)
     plt.savefig(F"{Output_Folder}/Distribution_of_Ancestry_{Genomewide_Ancestries[ancestry]}_Lengths_Boxplot.pdf")   
 
 
