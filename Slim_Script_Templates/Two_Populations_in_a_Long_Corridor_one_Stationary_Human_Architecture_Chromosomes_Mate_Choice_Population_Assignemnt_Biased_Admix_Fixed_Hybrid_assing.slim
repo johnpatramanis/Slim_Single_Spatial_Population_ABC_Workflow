@@ -167,7 +167,7 @@ initialize() {
 
 
 REMOVE_BOUNDARIES first() {
-	p1.setSpatialBounds(c(0, 0, 100, 20)); //// min_width,min_height,max_width,max_height
+	p1.setSpatialBounds(c(0, 0, WIDTH, HEIGHT)); //// min_width,min_height,max_width,max_height
 	///p2.setSpatialBounds(c(0, 0, 100, 25)); //// min_width,min_height,max_width,max_height
 }
 
@@ -268,14 +268,6 @@ early() {
 		POP.deviatePositions(offspring, "stopping", 1, "n", SD);
 		
 		
-		//// Check for hybrid individuals and change their population assignment
-		for (X in seq(1,Npop), NEWPOP in sim.subpopulations){
-		
-			hybrids = POP.subsetIndividuals(tag=X, maxAge=0);
-			if (hybrids.size()){
-				NEWPOP.takeMigrants(hybrids);
-			}
-		}
 		
 		
 		/// Evaluate pressure from other individuals
@@ -308,6 +300,24 @@ early() {
 //////////////////////////////
 //////////// END OF SIMULATION
 late() {
+	
+	//// Hybrid population assignment
+	for (POP in sim.subpopulations){ /// for each pop
+		
+	//// Check for hybrid individuals and change their population assignment
+	offspring = POP.subsetIndividuals(maxAge=0);
+	
+	for (X in seq(1,Npop), NEWPOP in sim.subpopulations){ ///for
+	
+		hybrids = POP.subsetIndividuals(tag = X, maxAge = 0);
+		if (hybrids.size()){
+			NEWPOP.takeMigrants(hybrids);
+		}
+    }
+	
+	}
+	
+	
 	
 	if (p1.individualCount == 0) {
 		
