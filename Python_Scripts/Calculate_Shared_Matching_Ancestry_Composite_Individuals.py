@@ -97,15 +97,10 @@ for Ancestry_Folder in os.listdir(F"{Folder}"):
 
         
         
-        ### Find out how many ancestries exist in total in this chromosome
-        Ancestries = []
+        ### The ancestry of the currently looked composite individual
+        Ancestry_of_this_Composite_ind = Ancestry_Folder.split('Ancestry_')[1]
 
-        for Ind in All_Individuals:
-            for ancestry in Ind:
-                if ancestry not in Ancestries:
-                    Ancestries.append(ancestry)
-                    #### keep track of maximum number of possible ancestries (could differ between chromosomes)
-                    Number_of_Maximum_Ancestries_Between_Chromosomes.append(ancestry)
+        
         
         
         ##### All possible pairs of haplosomes
@@ -120,35 +115,34 @@ for Ancestry_Folder in os.listdir(F"{Folder}"):
             ID_1 = All_Individuals_ID[PAIR[0]] ### ID of haplosome
             ID_2 = All_Individuals_ID[PAIR[1]] ### <<
             
-            #### for each ancestry 
-            for ancestry in Ancestries:
-                
-                
-                
-                #### Returns two lists of tree lengths
-                Matching_Trees, Missmatching_Trees = Return_Matching_Trees(Candidate_1 ,Candidate_2 ,Tree_Lengths ,ancestry)
-                
-                ### Both share ancestry under question for this length
-                Total_Matching = sum(Matching_Trees)
-                
-                ### One of them has the ancestry under question for this length, the other doesn't
-                Total_MissMatching = sum(Missmatching_Trees)
-                
-                ### AT LEAST ONE of them has the ancestry under question for this length
-                Total_Covering = Total_Matching + Total_MissMatching
-                
-                ### Neither of them have the ancestry under question for this length
-                Chromosome_lengh = sum(Tree_Lengths)
-                Total_NoAncestry = Chromosome_lengh - ( Total_Matching + Total_MissMatching )
-                
-                
-                ### In case no ancestry
-                if Total_Covering != 0:
-                ### One metric to sum this up
-                    Metric = Total_Matching / Total_Covering
-                else:
-                    'No_ancestry'
-                
-                
-                To_Print = F"{Chromosome}\t{ancestry}\t{ID_1}\t{ID_2}\t{Total_Matching}\t{Total_MissMatching}\t{Total_Covering}\t{Total_NoAncestry}\t{Metric}\n"
-                Output_File.write(To_Print)
+            #### Coverage of ancestry = 1, not coverage = 0
+            ancestry = '1'
+            
+            #### Returns two lists of tree lengths
+            Matching_Trees, Missmatching_Trees = Return_Matching_Trees(Candidate_1 ,Candidate_2 ,Tree_Lengths ,ancestry)
+            
+            ### Both share ancestry under question for this length
+            Total_Matching = sum(Matching_Trees)
+            
+            ### One of them has the ancestry under question for this length, the other doesn't
+            Total_MissMatching = sum(Missmatching_Trees)
+            
+            ### AT LEAST ONE of them has the ancestry under question for this length
+            Total_Covering = Total_Matching + Total_MissMatching
+            
+            ### Neither of them have the ancestry under question for this length
+            Chromosome_lengh = sum(Tree_Lengths)
+            Total_NoAncestry = Chromosome_lengh - ( Total_Matching + Total_MissMatching )
+            
+            
+            ### In case no ancestry
+            if Total_Covering != 0:
+            ### One metric to sum this up
+                Metric = Total_Matching / Total_Covering
+            else:
+                Metric = 0
+            
+            print(F"Ancestry {Ancestry_of_this_Composite_ind}, Chromosome {Chromosome}, Pair of Composite individuals {PAIR} has {Metric} matching ancestry ")
+            
+            To_Print = F"{Chromosome}\t{Ancestry_of_this_Composite_ind}\t{ID_1}\t{ID_2}\t{Total_Matching}\t{Total_MissMatching}\t{Total_Covering}\t{Total_NoAncestry}\t{Metric}\n"
+            Output_File.write(To_Print)
