@@ -124,7 +124,7 @@ for ancestry in range(0,len(Genomewide_Ancestries)):
     
     
 plt.xlabel('ID of Sampled Genomes Sorted by Position on X-axis', fontweight ='bold', fontsize = 13)
-ax.tick_params("x", labelsize = 6 , rotation=45)
+ax.tick_params("x", labelsize = 6 , rotation = 45)
 plt.ylabel('Mean Length of Ancestry Segments', fontweight ='bold', fontsize = 13)
 plt.legend()
 plt.savefig(F"{Output_Folder}/Mean_Length_of_Ancestry_Barplot.pdf")
