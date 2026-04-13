@@ -1,5 +1,5 @@
 ##### For conda env: conda install conda-forge::msprime conda-forge::gsl conda-forge::tskit conda-forge::pyslim
-##### How to Run: python Python_Scripts/Find_Admixture_and_Assign_Trees_to_Pop.py ./Simulation_Runs/Simulation_0/
+##### How to Run: python Python_Scripts/Coalesce_and_Calc_Diversity.py ./Simulation_Runs/Simulation_0/
 import random
 import msprime
 import pyslim
@@ -110,12 +110,6 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
     
     
     
-    
-    
-    
-    
-    
-    
     ################## Once Recapitation is done, add mutations and generate a VCF file
     
     ### Add neutral mutations to simplified tree
@@ -136,15 +130,6 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
         VCF.close()
         
         
-
-
-
-
-
-
-
-
-
 
 
 
@@ -202,43 +187,17 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
     
     
     
-    
-    
-    
-    
-    ########## IBD sharing
-    IBD_Sharing = []
-    ### prepare headers
-    if IBD_Header_Flag == 0:
-        IBD_File.write('Chromosome\tNodes_of_this_pair\ttotal_IBD_sharing_length\tnumber_of_shared_segments\n')
-
-        IBD_Header_Flag+=1
-    
-    
-    ##### Go through all possible pairs of sampled nodes and calcualte their IBD sharing for this chromosome
-    for COMB in combinations(Nodes_of_Sampled_Individuals, 2):
-        
-        pair = str(COMB[0])+ '-' + str(COMB[1])
-        segments = rts.ibd_segments(within = [COMB[0], COMB[1]], store_pairs = True, store_segments = True)
-        total_IBD_length = segments.total_span
-        number_of_IBD_segments = segments.num_segments
-        
-        IBD_File.write(F"{Chromosome_Name}\t{pair}\t{total_IBD_length}\t{number_of_IBD_segments}\n")
-    
-
-
-    
-    
-    
-    
-    
     Chromosome_Length = ncts.sequence_length
     
     ########## Homozygosity per individual, per chromosome
     
-    #### Cycle through sampled individuals, check if they have 2 copies of this chromosome (e.g. X,Y,MT are exceptions)
+    
+    
+    all_sampled_nodes = [node_id for Indiv_ID in VCF_LIST for node_id in ncts.individual(Indiv_ID).nodes if  ncts.node(node_id).is_sample()]
+    full_genotype_matrix = ncts.genotype_matrix(samples=all_sampled_nodes).T ### Matrix with dimensions: Number_of_Sampes x Number_of_SNPS
     Homozygosity_per_Individual_this_Chromosome = {}
     
+    #### Cycle through sampled individuals, check if they have 2 copies of this chromosome (e.g. X,Y,MT are exceptions)
     for Indiv_ID in VCF_LIST:
         
         #### Get nodes of this individual
@@ -251,11 +210,11 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
         if ( ncts.node(Node_1.id).is_sample() and  ncts.node(Node_2.id).is_sample() ):
             
             ### get genotypes for each copy of the chromosome
-            Genotype_1 = ncts.genotype_matrix(samples=[Node_1.id])
-            Genotype_2 = ncts.genotype_matrix(samples=[Node_2.id])
+            Genotype_1 = full_genotype_matrix[np.where(all_sampled_nodes == Node_1.id)] ### Pick full genotype of haplosome (row of genotype matrix)
+            Genotype_2 = full_genotype_matrix[np.where(all_sampled_nodes == Node_2.id)]
             
             ### Add them together, 0 = homozygous for ancest, 1 = heterozygous, 2 = homozygous for alt
-            Homozygosity_for_this_one = np.add(Genotype_1,Genotype_2)
+            Homozygosity_for_this_one = np.add(Genotype_1,Genotype_2)[0]
             Homozygosity_for_this_one = [int(x) for x in Homozygosity_for_this_one]
             Hom_Anc = Homozygosity_for_this_one.count(0)
             Hom_Alt = Homozygosity_for_this_one.count(2)

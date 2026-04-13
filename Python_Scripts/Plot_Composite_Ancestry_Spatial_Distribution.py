@@ -202,4 +202,4 @@ for ANC in Ancestries_Here:
     
     plt.show()
     ### plt.legend()
-    # plt.savefig(F"{Output_Folder}/Composite_Ancestry_{Genomewide_Ancestries[ANCESTRY_IN_QUESTION]}_Spatial_Completeness.pdf")
+    plt.savefig(F"{Output_Folder}/Composite_Ancestry_{ANC}_BoxSize_{Size_of_Box}_Spatial_Completeness.pdf")
