@@ -121,7 +121,7 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
             if Ancestry != '':
                 Last_Gen_Ancestry_Matrix[indiv_index].append(str(Ancestry))
 
-        print(F"Assigned Tree number {tree_here.index} of {len(ts.trees())}")
+        # print(F"Assigned Tree number {tree_here.index} of {len(ts.trees())}")
         
     print(F"Simulation in {Folder}, {Chromosome_Name}, {(indiv_index+1)/2} Individuals had their ancestry assigned! ")        
             
