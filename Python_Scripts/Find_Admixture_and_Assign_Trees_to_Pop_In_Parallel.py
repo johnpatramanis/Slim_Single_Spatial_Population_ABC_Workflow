@@ -60,8 +60,6 @@ Sampled_Individuals_Last_Gen = list(set(Sampled_Individuals_Last_Gen))
     
 
 
-print(Sampled_Individuals_Last_Gen)
-
 
 ### Output a list of individuals that were sampled, including some information on them from Slim
 Sampled_Individuals_Output = open(F'{Folder}/Sampled_Individuals.txt','w')   

@@ -95,8 +95,12 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
         
         Tree_Intervals.append(str(tree_here.interval.right))
         
+        Tree_Local_Look_Up = {node.id: node.population for node in First_Gen}
+            
+        
         for indiv_index in range(0,len(Last_Gen_SubSample)): ### For each Individual in the final generation (present)
             
+            Nodes_Traversed = []
             IND = Last_Gen_SubSample[indiv_index] ### get individual
 
             if Is_vacant_list[indiv_index]: ### Ignore vacant nodes (e.g. mitochondrial, Y, X chromosomes)
@@ -110,18 +114,25 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
             while Curr_node != -1:
                 
                 ###### if this node belongs to 1st generation, bingo, get the ancestry of that parent
-                if Curr_node in First_gen_lookup:
-                    Ancestry = First_gen_lookup[Curr_node]
+                if Curr_node in Tree_Local_Look_Up:
+                    
+                    Ancestry = Tree_Local_Look_Up[Curr_node]
+                    
+                    ### Add all nodes traversed so far to the lookup with the ancestry found
+                    for ND in Nodes_Traversed:
+                        Tree_Local_Look_Up[ND] = Ancestry
+                    
                     break
+                ###
+                Nodes_Traversed.append(Curr_node)
                 ### otherwise keep going up the parentage    
                 Curr_node = tree_here.parent(Curr_node)
             
             
-            # Append the result if an ancestor was found
-            if Ancestry != '':
-                Last_Gen_Ancestry_Matrix[indiv_index].append(str(Ancestry))
+            ## Append the result if an ancestor was found
+            Last_Gen_Ancestry_Matrix[indiv_index].append(str(Ancestry))
 
-        # print(F"Assigned Tree number {tree_here.index} of {len(ts.trees())}")
+        #print(F"Assigned Tree number {tree_here.index} of {len(ts.trees())}")
         
     print(F"Simulation in {Folder}, {Chromosome_Name}, {(indiv_index+1)/2} Individuals had their ancestry assigned! ")        
             
