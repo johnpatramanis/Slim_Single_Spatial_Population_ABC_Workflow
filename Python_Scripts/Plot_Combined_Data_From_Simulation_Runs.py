@@ -7,6 +7,9 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import itertools
+import seaborn as sns
+import pandas as pd
+
 
 
 ###### Prework
@@ -150,7 +153,7 @@ if len(Total_Ancestries) > 4:
 
 
 ##### Get Size of Box 
-Size_of_Box = 20
+Size_of_Box = 10
 
 
 #### Ind locations
@@ -236,8 +239,8 @@ for IND in Individual_Info:
 print(F"Working with a total of {len(Simulation_Folders)} Simulation Runs, adding to a total of {len(Individual_Info)} Individuals, containing {len(Total_Ancestries)} different ancestries")
 
 
-
-Ancestry_Percentages = [[ [] for y in Total_Ancestries ] for x in Individual_Info ]
+####### Dictionary of dictionaries. Every keys is an individual's ID, containing a dictionary, where every key is a ancestry label, tied to the genetic amount that corresponds to that ancestry
+Ind_to_Ancestry_Percentages =  { x[0]:{ y:0 for y in Total_Ancestries } for x in  Individual_Info }
  
  
 for Simulation_Folder in Simulation_Folders:
@@ -246,10 +249,97 @@ for Simulation_Folder in Simulation_Folders:
     
     SIMULATION_ID = Simulation_Folder.split('_')[1]
     
+    
+    
     ###### Load Individual info
     Ancestry_Percentage_File = open(PATH + 'Tracks/Whole_Genome.total_tracks', 'r')
-    Ancestry_Percentage_File.readline()
     
+    ### Because perhaps not all ancestries are found in all simulations
+    Ancestries_This_Sim = Ancestry_Percentage_File.readline().strip().split(':')[1]
+    Ancestries_This_Sim = Ancestries_This_Sim.split(',')
+    Ancestries_This_Sim = [x for x in Ancestries_This_Sim if x!='' ]
+    
+    
+    #### Go through each individual of this simulation
+    for LINE in Ancestry_Percentage_File:
+        
+        LINE = LINE.strip().split(":")
+
+        ID = LINE[0].split("_")
+        INDIVIDUAL_ID = F"IND_S{SIMULATION_ID}_{ID[1]}"
+        HAPLOTYPE_ID = F"HAP_S{SIMULATION_ID}_{ID[3]}"
+        
+        Percentages = [ float(x) for x in LINE[1].split(',') if x!= '' ]
+        
+        for N in range(0,len(Ancestries_This_Sim)):
+            
+            Ac = Ancestries_This_Sim[N]
+            Perc = Percentages[N]
+            
+            Ind_to_Ancestry_Percentages[INDIVIDUAL_ID][Ac] = Perc
+            
 
 
- 
+
+
+
+
+
+
+
+###### Plot collected data
+###### 
+
+
+
+################## Plot total ancestry per individual, seperated per box
+print(Ind_to_Ancestry_Percentages)
+
+      
+
+
+fig, axs = plt.subplots(nrows = N_Y_Boxes, ncols = N_X_Boxes, sharex=True, sharey=True, figsize=(N_X_Boxes, N_Y_Boxes *1.5 ))
+fig.suptitle('Percentage of ancestry for each 2D Box')
+
+#### cycle through every box, generate its plot
+counter = 0
+for X in range(0, N_X_Boxes):
+    
+    for Y in range(0, N_Y_Boxes):
+        
+        print(counter, Boxes_to_Inds[counter], Boxes_to_Dims[counter])
+        counter+=1
+
+        POINTS = []
+
+        for IND in Boxes_to_Inds[counter]:
+            
+            ##### What is the total length of this individual's genome?
+            Total_Genome = 0
+            for VALUE in Ind_to_Ancestry_Percentages[IND].values():
+                
+                Total_Genome += VALUE
+                
+
+            #### For each ancestry, calculate percentage of the genome for this individual
+            
+            for ANC in Total_Ancestries:
+                
+                if ANC in Ind_to_Ancestry_Percentages[IND].keys():
+                    
+                    Y = float( Ind_to_Ancestry_Percentages[IND][ANC] / Total_Genome )
+                
+                ### if ancestry is missing set to zero      
+                else:
+                    
+                    Y = 0.0
+
+                POINTS.append([ int(ANC), Y ])
+            
+
+        df = pd.DataFrame(POINTS, columns=["ancestry", "value"])
+        sns.stripplot(data=df, x = "ancestry", y = "value", jitter = True, ax = axs[0, 1])
+
+
+
+plt.show()
