@@ -47,7 +47,7 @@ for Simulation_Folder in os.listdir(Folder):
 
 
 
-
+############################################################################################################################################################################################################################################################
 ###### First Cycle
 ###### Go through each folder and collect the ID of each sampled individual, (rename them based one their simulation)
 ###### Also connect each individual with a pair of haplosomes, create a list of the renamed-haplosomes as well
@@ -233,6 +233,18 @@ for IND in Individual_Info:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+##############################################################################################################################################################################################################################################################################
 ###### Second Cycle
 ###### New Long Cycle through each Simulation file, collecting data and then plotting each metric (average across simulations)
  
@@ -287,11 +299,43 @@ for Simulation_Folder in Simulation_Folders:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##########################################################################################################################################################################################################################################
 ###### Plot collected data
 ###### 
 
 
-
+############################################################################################################
 ################## Plot total ancestry per individual, seperated per box
 print(Ind_to_Ancestry_Percentages)
 
@@ -301,17 +345,19 @@ print(Ind_to_Ancestry_Percentages)
 fig, axs = plt.subplots(nrows = N_Y_Boxes, ncols = N_X_Boxes, sharex=True, sharey=True, figsize=(N_X_Boxes, N_Y_Boxes *1.5 ))
 fig.suptitle('Percentage of ancestry for each 2D Box')
 
-#### cycle through every box, generate its plot
+#### cycle through Every box and its dimensions generate its sub-plot
 counter = 0
-for X in range(0, N_X_Boxes):
+for X_axis in range(0, N_X_Boxes):
     
-    for Y in range(0, N_Y_Boxes):
+    for Y_axis in range(N_Y_Boxes-1, -1, -1): ### here we go reverse, because matplot libe thinks subplot[0,0] is top left, not bottom left
         
         print(counter, Boxes_to_Inds[counter], Boxes_to_Dims[counter])
-        counter+=1
+        
+        
 
         POINTS = []
-
+        
+        #### For each individual in this box
         for IND in Boxes_to_Inds[counter]:
             
             ##### What is the total length of this individual's genome?
@@ -322,24 +368,26 @@ for X in range(0, N_X_Boxes):
                 
 
             #### For each ancestry, calculate percentage of the genome for this individual
-            
             for ANC in Total_Ancestries:
                 
                 if ANC in Ind_to_Ancestry_Percentages[IND].keys():
                     
-                    Y = float( Ind_to_Ancestry_Percentages[IND][ANC] / Total_Genome )
+                    Value = float( Ind_to_Ancestry_Percentages[IND][ANC] / Total_Genome )
                 
                 ### if ancestry is missing set to zero      
                 else:
                     
-                    Y = 0.0
-
-                POINTS.append([ int(ANC), Y ])
+                    Value = 0.0
+                
+                #### add a point of this ancestry to list
+                POINTS.append([ str(ANC), Value ])
             
 
-        df = pd.DataFrame(POINTS, columns=["ancestry", "value"])
-        sns.stripplot(data=df, x = "ancestry", y = "value", jitter = True, ax = axs[0, 1])
-
+        df = pd.DataFrame(POINTS, columns=["Ancestry", "Percentage"])
+        sns.stripplot(data=df, x = "Ancestry", y = "Percentage", jitter = True, hue="Ancestry" , palette=Colours_to_ancestries, ax = axs[ Y_axis, X_axis ])
+        
+        ### next box
+        counter+=1
 
 
 plt.show()
