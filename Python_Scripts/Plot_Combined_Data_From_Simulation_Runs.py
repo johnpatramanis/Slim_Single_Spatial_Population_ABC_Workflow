@@ -382,12 +382,23 @@ for X_axis in range(0, N_X_Boxes):
                 #### add a point of this ancestry to list
                 POINTS.append([ str(ANC), Value ])
             
-
+        ### convert to Pandas dataframe, because seaborn LOVES them
         df = pd.DataFrame(POINTS, columns=["Ancestry", "Percentage"])
-        sns.stripplot(data=df, x = "Ancestry", y = "Percentage", jitter = True, hue="Ancestry" , palette=Colours_to_ancestries, ax = axs[ Y_axis, X_axis ])
+        
+        #### ### Generate striplot
+        sns.stripplot(data=df, x = "Ancestry", y = "Percentage", jitter = True, hue="Ancestry", alpha = 0.85, palette=Colours_to_ancestries, ax = axs[ Y_axis, X_axis ])
+        
+        #### Generate Boxplot ontop of it
+        sns.boxplot(data = df, x = "Ancestry", y = "Percentage", showcaps = True, hue = "Ancestry" ,
+        boxprops = {'edgecolor': 'black','alpha': 0.3},
+        palette = Colours_to_ancestries,
+        whiskerprops = {'linewidth': 1},
+        showfliers = False,
+        ax = axs[ Y_axis, X_axis ])
+        
         
         ### next box
         counter+=1
 
 
-plt.show()
+plt.savefig(F"{Output_Folder}/Ancestry_Percentage_Boxes_of_{Size_of_Box}.pdf", format="pdf")
