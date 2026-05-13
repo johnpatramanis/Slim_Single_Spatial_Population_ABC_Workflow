@@ -1,5 +1,5 @@
 ##### Plot the combined results of all seperate simulation runs, belonging to the same scenario
-##### Run like this """python Python_Scripts/Plot_Combined_Data_From_Simulation_Runs.py ./Simulation_Runs/ ./Plots """
+##### Run like this """python3 Python_Scripts/Plot_Combined_Data_From_Simulation_Runs.py ./Simulation_Runs/ ./Plots """
 
 ### Import Packages
 import sys
@@ -84,7 +84,7 @@ for Simulation_Folder in Simulation_Folders:
     
         NEW_ID = F"IND_S{SIMULATION_ID}_{ID}"
         
-        Individual_Info.append([ NEW_ID, LOCATION, AGE, SEX, POP_ID, PEDIGREE_ID, PARENT_1_PEDIGREE_ID, PARENT_2_PEDIGREE_ID ])
+        Individual_Info.append([ NEW_ID, LOCATION, AGE, SEX, POP_ID, PEDIGREE_ID, PARENT_1_PEDIGREE_ID, PARENT_2_PEDIGREE_ID, SIMULATION_ID ])
         Individuals_to_Haplosomes[ NEW_ID ] = []
         
     Sample_Inds_File.close()    
@@ -253,7 +253,12 @@ print(F"Working with a total of {len(Simulation_Folders)} Simulation Runs, addin
 
 ####### Dictionary of dictionaries. Every keys is an individual's ID, containing a dictionary, where every key is a ancestry label, tied to the genetic amount that corresponds to that ancestry
 Ind_to_Ancestry_Percentages =  { x[0]:{ y:0 for y in Total_Ancestries } for x in  Individual_Info }
- 
+
+Ind_to_Ancestry_Mean_Length = { x[0]:{ y:0 for y in Total_Ancestries } for x in  Individual_Info }
+Ind_to_Ancestry_Mean_Variance = { x[0]:{ y:0 for y in Total_Ancestries } for x in  Individual_Info }
+
+Ind_to_Simulation_Origin = { x[0]:x[8] for x in Individual_Info}
+
  
 for Simulation_Folder in Simulation_Folders:
     
@@ -261,6 +266,10 @@ for Simulation_Folder in Simulation_Folders:
     
     SIMULATION_ID = Simulation_Folder.split('_')[1]
     
+
+    
+    
+
     
     
     ###### Load Individual info
@@ -270,9 +279,11 @@ for Simulation_Folder in Simulation_Folders:
     Ancestries_This_Sim = Ancestry_Percentage_File.readline().strip().split(':')[1]
     Ancestries_This_Sim = Ancestries_This_Sim.split(',')
     Ancestries_This_Sim = [x for x in Ancestries_This_Sim if x!='' ]
+
+
     
     
-    #### Go through each individual of this simulation
+    #### Go through each individuals ancestry percentages of this simulation
     for LINE in Ancestry_Percentage_File:
         
         LINE = LINE.strip().split(":")
@@ -291,28 +302,31 @@ for Simulation_Folder in Simulation_Folders:
             Ind_to_Ancestry_Percentages[INDIVIDUAL_ID][Ac] = Perc
             
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    
+    ###### Load Individual info
+    #### Go through each individuals ancestry lengths of this simulation
+    Ancestry_Lengths_File = open(PATH + 'Diversity_Metrics/Ancestry_Lengths.txt', 'r')
+    Labels = Ancestry_Lengths_File.readline().strip().split()
+    
+    
+    for LINE in Ancestry_Lengths_File:
+        
+        LINE = LINE.strip().split()
+    
+        ID = LINE[0].split("_")[1]
+        INDIVIDUAL_ID = F"IND_S{SIMULATION_ID}_{ID}"
+        ANCESTRIES = LINE[1:]
+        
+        for N in range(0,len(Ancestries_This_Sim)):
+            
+            Metrics = ANCESTRIES[N].split(",")
+            Ac = Ancestries_This_Sim[N]
+            Mean_Length = Metrics[0]
+            Mean_Variance_of_Lengths = Metrics[1]
+            
+            Ind_to_Ancestry_Mean_Length[INDIVIDUAL_ID][Ac] = Mean_Length
+            Ind_to_Ancestry_Mean_Variance[INDIVIDUAL_ID][Ac] = Mean_Variance_of_Lengths
+            
 
 
 
@@ -337,22 +351,23 @@ for Simulation_Folder in Simulation_Folders:
 
 ############################################################################################################
 ################## Plot total ancestry per individual, seperated per box
-print(Ind_to_Ancestry_Percentages)
+# print(Ind_to_Ancestry_Percentages) ### Dictionary of individuals as keys and a dictionary as value. The dictionary links each ancestry to a value
 
       
 
 
-fig, axs = plt.subplots(nrows = N_Y_Boxes, ncols = N_X_Boxes, sharex=True, sharey=True, figsize=(N_X_Boxes, N_Y_Boxes *1.5 ))
-fig.suptitle('Percentage of ancestry for each 2D Box')
 
+
+######################################################################
 #### cycle through Every box and its dimensions generate its sub-plot
+
+fig, axs = plt.subplots(nrows = N_Y_Boxes, ncols = N_X_Boxes, sharex=True, sharey=True)
+fig.suptitle('Percentage of ancestry for each 2D Box')
 counter = 0
 for X_axis in range(0, N_X_Boxes):
     
     for Y_axis in range(N_Y_Boxes-1, -1, -1): ### here we go reverse, because matplot libe thinks subplot[0,0] is top left, not bottom left
-        
-        print(counter, Boxes_to_Inds[counter], Boxes_to_Dims[counter])
-        
+                
         
 
         POINTS = []
@@ -386,11 +401,11 @@ for X_axis in range(0, N_X_Boxes):
         df = pd.DataFrame(POINTS, columns=["Ancestry", "Percentage"])
         
         #### ### Generate striplot
-        sns.stripplot(data=df, x = "Ancestry", y = "Percentage", jitter = True, hue="Ancestry", alpha = 0.85, palette=Colours_to_ancestries, ax = axs[ Y_axis, X_axis ])
+        sns.stripplot(data=df, x = "Ancestry", y = "Percentage", jitter = 0.35, hue="Ancestry", size = 2.5,alpha = 0.5, palette=Colours_to_ancestries, ax = axs[ Y_axis, X_axis ])
         
         #### Generate Boxplot ontop of it
         sns.boxplot(data = df, x = "Ancestry", y = "Percentage", showcaps = True, hue = "Ancestry" ,
-        boxprops = {'edgecolor': 'black','alpha': 0.3},
+        boxprops = {'edgecolor': 'black','alpha': 0.75},
         palette = Colours_to_ancestries,
         whiskerprops = {'linewidth': 1},
         showfliers = False,
@@ -402,3 +417,136 @@ for X_axis in range(0, N_X_Boxes):
 
 
 plt.savefig(F"{Output_Folder}/Ancestry_Percentage_Boxes_of_{Size_of_Box}.pdf", format="pdf")
+
+
+
+
+
+######################################################################
+#### Do it again, but this time, paint based on the simulation-identity of each individual
+
+fig, axs = plt.subplots(nrows = N_Y_Boxes, ncols = N_X_Boxes, sharex=True, sharey=True)
+fig.suptitle('Percentage of ancestry for each 2D Box, coloured by simulation origin')
+counter = 0
+for X_axis in range(0, N_X_Boxes):
+    
+    for Y_axis in range(N_Y_Boxes-1, -1, -1): ### here we go reverse, because matplot libe thinks subplot[0,0] is top left, not bottom left
+                
+        
+
+        POINTS = []
+        
+        #### For each individual in this box
+        for IND in Boxes_to_Inds[counter]:
+            
+            ##### Which simulation this individuals comes from
+            Simulation = Ind_to_Simulation_Origin[IND]
+            ##### What is the total length of this individual's genome?
+            Total_Genome = 0
+            for VALUE in Ind_to_Ancestry_Percentages[IND].values():
+                
+                Total_Genome += VALUE
+                
+
+            #### For each ancestry, calculate percentage of the genome for this individual
+            for ANC in Total_Ancestries:
+                
+                if ANC in Ind_to_Ancestry_Percentages[IND].keys():
+                    
+                    Value = float( Ind_to_Ancestry_Percentages[IND][ANC] / Total_Genome )
+                
+                ### if ancestry is missing set to zero      
+                else:
+                    
+                    Value = 0.0
+                
+                #### add a point of this ancestry to list
+                POINTS.append([ str(ANC), Value, str(Simulation) ])
+        
+            # if ( (ANC != "1") and (Value<=0.15) and (counter >= 18) ):
+                # print(F"Found individual {IND} from Simulation {Simulation} that has very low Ancestry {ANC}")
+
+
+        
+        ### convert to Pandas dataframe, because seaborn LOVES them
+        df = pd.DataFrame(POINTS, columns=["Ancestry", "Percentage", "Simulation"])
+        
+        #### ### Generate striplot
+        sns.stripplot(data=df, x = "Ancestry", y = "Percentage", jitter = 0.75, hue = "Simulation", size = 2.5,alpha = 0.5, ax = axs[ Y_axis, X_axis ])
+        axs[Y_axis, X_axis].legend_.remove()
+        
+        
+        #### Generate Boxplot ontop of it
+        sns.boxplot(data = df, x = "Ancestry", y = "Percentage", showcaps = True, hue = "Ancestry" ,
+        boxprops = {'edgecolor': 'black','alpha': 0.01},
+        palette = Colours_to_ancestries,
+        whiskerprops = {'linewidth': 1},
+        showfliers = False,
+        ax = axs[ Y_axis, X_axis ])
+        
+        
+        
+        ### next box
+        counter+=1
+
+
+plt.savefig(F"{Output_Folder}/Ancestry_Percentage_Boxes_of_{Size_of_Box}_Simulation_Coloured.pdf", format="pdf")
+
+
+
+
+######################################################################
+#### Do it again, but this time plot the lengths
+
+fig, axs = plt.subplots(nrows = N_Y_Boxes, ncols = N_X_Boxes, sharex=True, sharey=True)
+fig.suptitle('Mean length of ancestry for each 2D Box, coloured by simulation origin')
+counter = 0
+for X_axis in range(0, N_X_Boxes):
+    
+    for Y_axis in range(N_Y_Boxes-1, -1, -1): ### here we go reverse, because matplot libe thinks subplot[0,0] is top left, not bottom left
+                
+        
+
+        POINTS = []
+        
+        #### For each individual in this box
+        for IND in Boxes_to_Inds[counter]:
+               
+
+            #### For each ancestry, calculate percentage of the genome for this individual
+            for ANC in Total_Ancestries:
+                
+                if ANC in Ind_to_Ancestry_Mean_Length[IND].keys():
+                    
+                    Value = float(Ind_to_Ancestry_Mean_Length[IND][ANC])
+                
+                ### if ancestry is missing set to zero      
+                else:
+                    
+                    Value = 0.0
+                
+                #### add a point of this ancestry to list
+                POINTS.append([ str(ANC), Value ])
+
+
+        
+        ### convert to Pandas dataframe, because seaborn LOVES them
+        df = pd.DataFrame(POINTS, columns=["Ancestry", "Mean Length"])
+        
+        #### ### Generate striplot
+        sns.stripplot(data=df, x = "Ancestry", y = "Mean Length", jitter = 0.75, hue = "Ancestry", size = 2.5,alpha = 0.5, ax = axs[ Y_axis, X_axis ])
+        
+        
+        #### Generate Boxplot ontop of it
+        sns.boxplot(data = df, x = "Ancestry", y = "Mean Length", showcaps = True, hue = "Ancestry" ,
+        boxprops = {'edgecolor': 'black','alpha': 0.01},
+        palette = Colours_to_ancestries,
+        whiskerprops = {'linewidth': 1},
+        showfliers = False,
+        ax = axs[ Y_axis, X_axis ])
+        
+        ### next box
+        counter+=1
+
+
+plt.savefig(F"{Output_Folder}/Ancestry_Mean_Lengths_Boxes_of_{Size_of_Box}.pdf", format="pdf")

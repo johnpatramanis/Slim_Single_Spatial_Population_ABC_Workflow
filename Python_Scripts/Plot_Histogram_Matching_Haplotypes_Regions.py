@@ -209,7 +209,7 @@ for X_DIM in range(Size_of_Box,max_width + Size_of_Box, Size_of_Box): ### left t
 
 
 
-
+fig, ax = plt.subplots()
 
 
 ##### For each ancestry
@@ -217,18 +217,19 @@ for X_DIM in range(Size_of_Box,max_width + Size_of_Box, Size_of_Box): ### left t
 for Ancestry in sorted(ANCESTRIES.keys()):
 
     PAIRED_BOXES = []
+    PAIRED_BOXES_LOCATION = []
 
     ###### Compare every haplosome in box 1 with every haplosome in box 2
     for BOX_1 in BOXES:
         for BOX_2 in BOXES:
             
             HAPS_BOX1 = BOX_1[0]
-            X_OF_BOX_1 = BOX_1[1]
-            Y_OF_BOX_1 = BOX_1[2]
+            X_OF_BOX_1 = int(BOX_1[1])
+            Y_OF_BOX_1 = int(BOX_1[2])
             
             HAPS_BOX2 = BOX_2[0]
-            X_OF_BOX_2 = BOX_2[1]
-            Y_OF_BOX_2 = BOX_2[2]        
+            X_OF_BOX_2 = int(BOX_2[1])
+            Y_OF_BOX_2 = int(BOX_2[2])     
             
 
             ALL_PAIRS = list(itertools.product(HAPS_BOX1, HAPS_BOX2))
@@ -249,6 +250,7 @@ for Ancestry in sorted(ANCESTRIES.keys()):
             MEAN_SIMILARITY_BOX = np.mean(MEAN_SIMILARITY_BOX)
             
             PAIRED_BOXES.append(MEAN_SIMILARITY_BOX) ####  X_OF_BOX_1, Y_OF_BOX_1, X_OF_BOX_2, Y_OF_BOX_2
+            PAIRED_BOXES_LOCATION.append(F"{X_OF_BOX_1}:{Y_OF_BOX_1}\n{X_OF_BOX_2}:{Y_OF_BOX_2}") ####  X_OF_BOX_1, Y_OF_BOX_1, X_OF_BOX_2, Y_OF_BOX_2
             
             
             
@@ -260,16 +262,25 @@ for Ancestry in sorted(ANCESTRIES.keys()):
     counter=0
     for i in range(0,Max_Dim):
         for j in range(0, Max_Dim):
-    
+            
             Sim_matrix[i,j] = FINAL_MATRIX[counter]
             Sim_matrix[j,i] = Sim_matrix[i,j]
+            
+            
+            ### Add location of each pair
+            Locations = PAIRED_BOXES_LOCATION[counter]
+            ax.text(j, i, Locations, ha='center',va='center',color='black',fontsize=0.05,rotation=-45,rotation_mode='anchor')
             counter+=1
     
     
-    plt.xticks([x+0.5 for x in range(0,Max_Dim)], [x for x in range(Size_of_Box, Size_of_Box*Max_Dim + Size_of_Box, Size_of_Box)],rotation=45)
+    plt.xticks([x+0.5 for x in range(0,Max_Dim)], [x for x in range(Size_of_Box, Size_of_Box*Max_Dim + Size_of_Box, Size_of_Box)], rotation=45)
     plt.yticks([x+0.5 for x in range(0,Max_Dim)], [x for x in range(Size_of_Box, Size_of_Box*Max_Dim + Size_of_Box, Size_of_Box)])
     
     plt.imshow(Sim_matrix, cmap='hot', interpolation='nearest')
+    
+    
+    
+    
     plt.savefig(F"{Output_Folder}/Ancestry_{Ancestry}_Regional_Similarity_Heatmap_boxsize_{Size_of_Box}.pdf")
     
     
