@@ -1,5 +1,25 @@
 {
-	"SD":[0.3],
+	"SD":[0.5],
+	"SX":[0.5],
+	"SM":[0.5],
     "K":[4.5],
-    "OUTDIR":["/projects/archaic_introgression-AUDIT/people/rjt939/Slim_Simulations/One_Stable_Pop_ABC/"]
+    "LIFETIME":[4],
+    "WIDTH":[100],
+    "HEIGHT":[20],
+    "RUNTIME":[10000],
+    "REMOVE_BOUNDARIES":[100],
+    "KILL_POP_TWO":[1350],
+    "SPECIESM":[0.5],
+    "MU":[0.0],
+    "POP_1_WIDTH_MIN":[0.0],
+    "POP_1_WIDTH_MAX":[15.0],
+    "POP_1_HEIGHT_MIN":[0.0],
+    "POP_1_HEIGHT_MAX":[10.0],
+    "POP_2_WIDTH_MIN":[40.0],
+    "POP_2_WIDTH_MAX":[55.0],
+    "POP_2_HEIGHT_MIN":[10.0],
+    "POP_2_HEIGHT_MAX":[20.0],
+    "LifeTable":[0.00,0.00,0.00,0.15,0.2,0.3,0.5,0.75,0.85,0.95,1.0],
+    "OUTDIR":["/projects/archaic_introgression-AUDIT/people/rjt939/Slim_Simulations/One_Stable_Pop_ABC/"],
+    "Genome_Architecture_Path":["../../Human_Genome_Architecture/"]
 }
