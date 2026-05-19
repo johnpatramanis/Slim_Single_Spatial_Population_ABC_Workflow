@@ -410,13 +410,17 @@ for X_axis in range(0, N_X_Boxes):
         whiskerprops = {'linewidth': 1},
         showfliers = False,
         ax = axs[ Y_axis, X_axis ])
-        
+        axs[Y_axis, X_axis].set_xlabel("")
+        axs[Y_axis, X_axis].set_ylabel("")
         
         ### next box
         counter+=1
 
-
+fig.supxlabel("Ancestry")
+fig.supylabel("Percentage of Ancestry")
+plt.tight_layout(rect=[0.01, 0.01, 1.0, 1.0])
 plt.savefig(F"{Output_Folder}/Ancestry_Percentage_Boxes_of_{Size_of_Box}.pdf", format="pdf")
+
 
 
 
@@ -478,19 +482,22 @@ for X_axis in range(0, N_X_Boxes):
         
         #### Generate Boxplot ontop of it
         sns.boxplot(data = df, x = "Ancestry", y = "Percentage", showcaps = True, hue = "Ancestry" ,
-        boxprops = {'edgecolor': 'black','alpha': 0.01},
+        boxprops = {'edgecolor': 'black','alpha': 1.0,'facecolor': 'none'},
         palette = Colours_to_ancestries,
         whiskerprops = {'linewidth': 1},
         showfliers = False,
         ax = axs[ Y_axis, X_axis ])
-        
-        
+        axs[Y_axis, X_axis].set_xlabel("")
+        axs[Y_axis, X_axis].set_ylabel("")
         
         ### next box
         counter+=1
 
-
+fig.supxlabel("Ancestry")
+fig.supylabel("Percentage of Ancestry")
+plt.tight_layout(rect=[0.01, 0.01, 1.0, 1.0])
 plt.savefig(F"{Output_Folder}/Ancestry_Percentage_Boxes_of_{Size_of_Box}_Simulation_Coloured.pdf", format="pdf")
+
 
 
 
@@ -499,7 +506,7 @@ plt.savefig(F"{Output_Folder}/Ancestry_Percentage_Boxes_of_{Size_of_Box}_Simulat
 #### Do it again, but this time plot the lengths
 
 fig, axs = plt.subplots(nrows = N_Y_Boxes, ncols = N_X_Boxes, sharex=True, sharey=True)
-fig.suptitle('Mean length of ancestry for each 2D Box, coloured by simulation origin')
+fig.suptitle('Mean length of ancestry for each 2D Box')
 counter = 0
 for X_axis in range(0, N_X_Boxes):
     
@@ -534,19 +541,86 @@ for X_axis in range(0, N_X_Boxes):
         df = pd.DataFrame(POINTS, columns=["Ancestry", "Mean Length"])
         
         #### ### Generate striplot
-        sns.stripplot(data=df, x = "Ancestry", y = "Mean Length", jitter = 0.75, hue = "Ancestry", size = 2.5,alpha = 0.5, ax = axs[ Y_axis, X_axis ])
+        sns.stripplot(data=df, x = "Ancestry", y = "Mean Length", jitter = 0.35, hue="Ancestry", size = 2.5,alpha = 0.5, palette=Colours_to_ancestries, ax = axs[ Y_axis, X_axis ])
         
         
         #### Generate Boxplot ontop of it
         sns.boxplot(data = df, x = "Ancestry", y = "Mean Length", showcaps = True, hue = "Ancestry" ,
-        boxprops = {'edgecolor': 'black','alpha': 0.01},
+        boxprops = {'edgecolor': 'black','alpha': 0.75},
         palette = Colours_to_ancestries,
         whiskerprops = {'linewidth': 1},
         showfliers = False,
         ax = axs[ Y_axis, X_axis ])
+        axs[Y_axis, X_axis].set_xlabel("")
+        axs[Y_axis, X_axis].set_ylabel("")
         
         ### next box
         counter+=1
 
-
+fig.supxlabel("Ancestry")
+fig.supylabel("Mean length of ancestry segment")
+plt.tight_layout(rect=[0.01, 0.01, 1.0, 1.0])
 plt.savefig(F"{Output_Folder}/Ancestry_Mean_Lengths_Boxes_of_{Size_of_Box}.pdf", format="pdf")
+
+
+
+
+######################################################################
+#### Do it again, but this time plot the lengths
+
+fig, axs = plt.subplots(nrows = N_Y_Boxes, ncols = N_X_Boxes, sharex=True, sharey=True)
+fig.suptitle('Mean variance of length of ancestry for each 2D Box')
+counter = 0
+for X_axis in range(0, N_X_Boxes):
+    
+    for Y_axis in range(N_Y_Boxes-1, -1, -1): ### here we go reverse, because matplot libe thinks subplot[0,0] is top left, not bottom left
+                
+        
+
+        POINTS = []
+        
+        #### For each individual in this box
+        for IND in Boxes_to_Inds[counter]:
+               
+
+            #### For each ancestry, calculate percentage of the genome for this individual
+            for ANC in Total_Ancestries:
+                
+                if ANC in Ind_to_Ancestry_Mean_Variance[IND].keys():
+                    
+                    Value = float(Ind_to_Ancestry_Mean_Variance[IND][ANC])
+                
+                ### if ancestry is missing set to zero      
+                else:
+                    
+                    Value = 0.0
+                
+                #### add a point of this ancestry to list
+                POINTS.append([ str(ANC), Value ])
+
+
+        
+        ### convert to Pandas dataframe, because seaborn LOVES them
+        df = pd.DataFrame(POINTS, columns=["Ancestry", "Variance of Length"])
+        
+        #### ### Generate striplot
+        sns.stripplot(data=df, x = "Ancestry", y = "Variance of Length", jitter = 0.35, hue="Ancestry", size = 2.5,alpha = 0.5, palette=Colours_to_ancestries, ax = axs[ Y_axis, X_axis ])
+        
+        
+        #### Generate Boxplot ontop of it
+        sns.boxplot(data = df, x = "Ancestry", y = "Variance of Length", showcaps = True, hue = "Ancestry" ,
+        boxprops = {'edgecolor': 'black','alpha': 0.75},
+        palette = Colours_to_ancestries,
+        whiskerprops = {'linewidth': 1},
+        showfliers = False,
+        ax = axs[ Y_axis, X_axis ])
+        axs[Y_axis, X_axis].set_xlabel("")
+        axs[Y_axis, X_axis].set_ylabel("")
+        
+        ### next box
+        counter+=1
+
+fig.supxlabel("Ancestry")
+fig.supylabel("Mean variance of length of ancestry segments")
+plt.tight_layout(rect=[0.01, 0.01, 1.0, 1.0])
+plt.savefig(F"{Output_Folder}/Ancestry_Mean_Variance_of_Lengths_Boxes_of_{Size_of_Box}.pdf", format="pdf")
