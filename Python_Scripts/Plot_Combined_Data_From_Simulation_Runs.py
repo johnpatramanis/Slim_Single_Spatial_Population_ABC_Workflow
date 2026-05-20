@@ -4,11 +4,14 @@
 ### Import Packages
 import sys
 import os
+import random
 import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
 import numpy as np
 import itertools
 import seaborn as sns
 import pandas as pd
+import json
 
 
 
@@ -29,6 +32,9 @@ for Simulation_Folder in os.listdir(Folder):
     if (os.path.exists(Failure_to_Simulate) == False):
         
         Simulation_Folders.append(Simulation_Folder)
+
+
+
 
 
 
@@ -233,11 +239,133 @@ for IND in Individual_Info:
 
 
 
+############################################################################################################################################################################################################################################################
+###### If available use the params file to plot the dimensions of the environment and the initial and final population
 
 
+PATH = F"./{Folder}/{Simulation_Folders[0]}/"
+SIMULATION_ID = Simulation_Folders[0].split('_')[1]
 
 
+Parameters_File = PATH + "params.json"
 
+
+with open(Parameters_File, "r") as JSON: ### load parameters as json dictionary
+    JSON_data = json.load(JSON)
+    
+JSON.close() # close file
+
+#### make sure information on population location is available
+if ( "POP_1_WIDTH_MIN" in JSON_data.keys() ) and ( "POP_1_HEIGHT_MIN" in JSON_data.keys() ):
+    
+    print("Creating plot with spatial setup of the populations at first generation")
+    
+    ## Real Dims of space
+    Real_Width = JSON_data["WIDTH"][0]
+    Real_Height = JSON_data["HEIGHT"][0]
+    
+    #### Space between box and plot edges
+    padding = 1
+
+    #### Outline thickness
+    line_thickness = 3
+
+    fig, ax = plt.subplots()
+
+    #### Add rectangle
+    rect = Rectangle(
+        (0, 0),          # bottom-left corner
+        Real_Width,             # width
+        Real_Height,             # height
+        linewidth=line_thickness,
+        edgecolor='white',
+        facecolor='none'  # no fill
+    )
+
+    ax.add_patch(rect)
+
+    ### Set plot limits with padding
+    ax.set_xlim(-padding, Real_Width + padding)
+    ax.set_ylim(-padding, Real_Height + padding)
+    ax.set_aspect('equal')
+    
+    
+    ####### Cycle through ancestries and plot some individuals if the population location is in the parameters folder
+    for SPAT_ANC in Total_Ancestries:
+        
+        
+        if F"POP_{SPAT_ANC}_WIDTH_MIN" in JSON_data.keys():
+            
+            min_width = JSON_data[F"POP_{SPAT_ANC}_WIDTH_MIN"][0]
+            max_width = JSON_data[F"POP_{SPAT_ANC}_WIDTH_MAX"][0]
+            min_height = JSON_data[F"POP_{SPAT_ANC}_HEIGHT_MIN"][0]
+            max_height = JSON_data[F"POP_{SPAT_ANC}_HEIGHT_MAX"][0]
+                        
+            ### Print random individuals within population range
+            N_points = 100
+            for i in range(N_points):
+
+                # Random position within limits
+                x = random.uniform(min_width, max_width)
+                y = random.uniform(min_height, max_height)
+
+
+                # Plot point
+                ax.scatter(
+                    x,
+                    y,
+                    color = Colours_to_ancestries[SPAT_ANC],
+                    s = 5   # point size
+                )
+    
+    
+    
+    
+    plt.savefig(F"{Output_Folder}/Population_Spatial_Setup_First_Gen.pdf", format="pdf")
+    
+    
+    
+    
+    
+    #####################################################################################
+    ######## Create plot at last tick of the slim simulation (of sampled individuals)
+    print("Creating plot with spatial setup of the populations at last generation")
+    
+    
+    #### New rectangle
+    fig, ax = plt.subplots()
+    rect = Rectangle(
+        (0, 0),          # bottom-left corner
+        Real_Width,             # width
+        Real_Height,             # height
+        linewidth=line_thickness,
+        edgecolor='white',
+        facecolor='none'  # no fill
+    )
+    
+    ax.add_patch(rect)
+    
+    ### Set plot limits with padding
+    ax.set_xlim(-padding, Real_Width + padding)
+    ax.set_ylim(-padding, Real_Height + padding)
+    ax.set_aspect('equal')
+    
+    for IND in Individual_Info:
+        
+        LOC = IND[1].split('--')
+        LOC = [float(x) for x in LOC]
+        X_pos = LOC[0]
+        Y_pos = LOC[1]
+        POP_ID = IND[4]
+        
+        ax.scatter(
+            X_pos,
+            Y_pos,
+            color = Colours_to_ancestries[POP_ID],
+            s = 5   # point size
+        )
+
+    plt.savefig(F"{Output_Folder}/Population_Spatial_Setup_Last_Gen.pdf", format="pdf")
 
 
 
@@ -351,7 +479,8 @@ for Simulation_Folder in Simulation_Folders:
 
 ############################################################################################################
 ################## Plot total ancestry per individual, seperated per box
-# print(Ind_to_Ancestry_Percentages) ### Dictionary of individuals as keys and a dictionary as value. The dictionary links each ancestry to a value
+# print(Ind_to_Ancestry_Percentages)
+### Dictionary of individuals as keys and a dictionary as value. The dictionary links each ancestry to a value
 
       
 
@@ -477,7 +606,8 @@ for X_axis in range(0, N_X_Boxes):
         
         #### ### Generate striplot
         sns.stripplot(data=df, x = "Ancestry", y = "Percentage", jitter = 0.75, hue = "Simulation", size = 2.5,alpha = 0.5, ax = axs[ Y_axis, X_axis ])
-        axs[Y_axis, X_axis].legend_.remove()
+        if hasattr(axs[Y_axis, X_axis].legend_, 'remove'):
+            axs[Y_axis, X_axis].legend_.remove()
         
         
         #### Generate Boxplot ontop of it
