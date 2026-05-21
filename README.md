@@ -12,7 +12,7 @@ The project was initially designed to study Neanderthal and modern human admxitu
 
 <br/><br/>
 
-**```Slim_Script.slim```**: This file is equally important to the ```Snakemakefile```. This Slim script is spatial (2D) [non-WF simulation model](https://academic.oup.com/mbe/article/36/3/632/5229931). The simulation is controlled by a number of parameters (e.g. simulation duration or size of 2D space). These parameters are preset within the script, but will automatically be substituted by the parameters within ```params.json```.
+**```Slim_Script.slim```**: This file is equally important to the ```Snakemakefile```. This Slim script is spatial (2D) [non-WF simulation model](https://academic.oup.com/mbe/article/36/3/632/5229931). The template for this simulation was taken from ["Space is palce" - Battey et al. 2020](https://academic.oup.com/genetics/article/215/1/193/5930485), but a number of modification have been made. The simulation is controlled by a number of parameters (e.g. simulation duration or size of 2D space). These parameters are preset within the script, but will automatically be substituted by the parameters within ```params.json```.
 <br/><br/>
 
 **```params.json```**: Optional file. Any parameter defined within this json file, that matches the name of a parameter in the ```Slim_Script.slim```, will be replaced in the simulation script. The user can use this script to modify the simulation
