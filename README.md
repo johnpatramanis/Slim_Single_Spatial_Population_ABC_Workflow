@@ -16,6 +16,6 @@ The project was initially designed to study Neanderthal and modern human admxitu
 
 **Input_Parameters.txt**
 
-**Demography.yaml**: This file is a [DEMES](https://popsim-consortium.github.io/demes-spec-docs/main/introduction.html) demography yaml file.
+**Demography.yaml**: This file is a [DEMES](https://popsim-consortium.github.io/demes-spec-docs/main/introduction.html) demography yaml file. This demography file is used by msprime to simulate the population history, _before_ the slim simulation, thus extending it further into the past. In the absense of this file, all populaations of Slim will coalesce using a default population scenario (where all populations coalesce together into one population at the end of the Slim Script).  **WARNING** If you want to use a custom demography, by editing this file, please make sure that the populations match between the Slim script and the Demography.yaml (msprime) script. If there are populations in the Slim script that have no ancestors in the Demography.yaml script, the script will crash. 
 
 ### Other Folders
