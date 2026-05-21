@@ -16,7 +16,6 @@ The project was initially designed to study Neanderthal and modern human admxitu
 
 **Input_Parameters.txt**
 
-**Demography.yaml**
-This file is a [DEMES](https://popsim-consortium.github.io/demes-spec-docs/main/introduction.html) demography yaml file.
+**Demography.yaml**: This file is a [DEMES](https://popsim-consortium.github.io/demes-spec-docs/main/introduction.html) demography yaml file.
 
 ### Other Folders
