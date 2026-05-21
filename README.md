@@ -1,6 +1,4 @@
 # Spatial Admixture Simulations
-<br/><br/>
-
 
 This repository contains code to simuate and analyse spatial admixture between human-like populations.
 The project was initially designed to study Neanderthal and modern human admxiture paterns, but with some modifications it can be applied to multiple other species and models.
@@ -14,11 +12,11 @@ The project was initially designed to study Neanderthal and modern human admxitu
 
 **Slim_Script.slim**
 
-
 **params.json**
 
 **Input_Parameters.txt**
 
 **Demography.yaml**
+This file is a [DEMES](https://popsim-consortium.github.io/demes-spec-docs/main/introduction.html) demography yaml file.
 
 ### Other Folders
