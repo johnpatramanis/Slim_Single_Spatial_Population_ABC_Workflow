@@ -2,7 +2,11 @@
 <br/><br/>
 
 
-**```Find_Admixture_and_Assign_Trees_to_Pop.py```**: Very crucial script. This script takes as input the generated tree sequences from the Slim simulation. A user-defined number of samples are drawn from the last generation of the simulation (present day). For each of these sampled individuals, for each chromosome and for each copy of the chromosme, every tree is checked. The haplotype's tree is climbed upto the first generation of the Slim simulation. Depending on which population it coalesces to, the haplotype is then assigned an ancestry named after that population. A segment that originates from 'population 1' is assigned 'ancestry 1'. 
+**```Find_Admixture_and_Assign_Trees_to_Pop.py```**: Very crucial script. This script takes as input the generated tree sequences from the Slim simulation. A user-defined number of samples are drawn from the last generation of the simulation (present day). For each of these sampled individuals, for each chromosome and for each copy of the chromosme, every tree is checked. The haplotype's tree is climbed upto the first generation of the Slim simulation. Depending on which population it coalesces to, the haplotype is then assigned an ancestry named after that population. A segment that originates from 'population 1' is assigned 'ancestry 1'. Produces the ```Ancestries``` folder, generating a ```.anc``` file for every chromosome. These files contain the ancestry assignment for every tree for all individuals (both copies if autosomal). They also contain the length of each tree in basepairs and the total number of possible ancestries in the first row.
+
+<br/><br/>
+
+**```Find_Admixture_and_Assign_Trees_to_Pop_In_Parallel.py```**: Alternative version of ```Find_Admixture_and_Assign_Trees_to_Pop.py```. Takes the same input and produces the same outputs, but runs multiple chromosomes in parallel (4 by default). It's more intensive on memory, but can significantly speed up the processing time. Renaming this script ```Find_Admixture_and_Assign_Trees_to_Pop.py``` will make Snakemake use it instead.
 
 <br/><br/>
 
