@@ -26,4 +26,8 @@ The project was initially designed to study Neanderthal and modern human admxitu
 
 ### Other Folders
 
+**```Human_Genome_Architecture```**
 
+**```Python_Scripts```**
+
+**```Slim_Script_Templates```**
