@@ -26,8 +26,8 @@ The project was initially designed to study Neanderthal and modern human admxitu
 
 ### Other Folders
 
-**```Human_Genome_Architecture```**
+**```Human_Genome_Architecture```**: This folder contains files that can be used to generate realistic human-like genomes. For every chromosome there are three types of files: a) Chromosome length files, which denome the lengh of a chromosome (e.g. ```chr_length.txt```) , b) Recombination files, which denote the recombination rate of different regions across the chromosome (e.g. ```chr1_recombination.txt```)  , c) files denoting where genomic elements are found in the genome (e.g. ```chr_genomic_elements.txt```) - which are currently not used in our simulations. The files were taken from [Simhumanity - Haller et al. 2025](https://pubmed.ncbi.nlm.nih.gov/40949978/).
 
-**```Python_Scripts```**
+**```Python_Scripts```**: This folder
 
-**```Slim_Script_Templates```**
+**```Slim_Script_Templates```**: This folder
