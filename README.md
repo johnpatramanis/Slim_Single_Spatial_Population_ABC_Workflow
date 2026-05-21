@@ -1,4 +1,4 @@
-# Spatial Admixture code using Slim 5.0
+# Spatial Admixture Simulations
 <br/><br/>
 
 
