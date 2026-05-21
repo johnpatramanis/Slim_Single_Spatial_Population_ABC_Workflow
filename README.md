@@ -33,4 +33,4 @@ The project was initially designed to study Neanderthal and modern human admxitu
 
 **```Python_Scripts```**: This folder contains all the python scripts that are executed to generate the msprime simulations, downstream metrics and plots, after the Slim simulation finishes. 
 
-**```Slim_Script_Templates```**: This folder
+**```Slim_Script_Templates```**: Slim scipt templates, most of which are older versions of the current ```Slim_Script.slim```
