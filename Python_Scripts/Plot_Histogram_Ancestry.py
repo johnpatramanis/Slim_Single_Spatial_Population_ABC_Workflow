@@ -6,6 +6,8 @@ import sys
 import os
 import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+from matplotlib import transforms
 import numpy as np
 
 
@@ -55,7 +57,14 @@ for LINE in Individuals_File:
     Location = [float(x) for x in LINE[1].split('--')]
     Individual_Location.append( [LINE[0]] + Location )
 
+
+    
 Individual_Location = sorted(Individual_Location, key = lambda x: x[1])
+Individual_Location_Y_sorted = sorted(Individual_Location, key = lambda x: x[2])
+
+
+##################### Read info on spatial location of original populations
+#### TBImplemented, when parameter file format is decided
 
 
 
@@ -77,10 +86,9 @@ for line in File:
     
 
 
-
-
 ### Sort Haplotypes of this chromosome based on the location of the individual carying them
 Sorted_IDs = []
+
 for x in Individual_Location:
     for y in Individuals_to_Ancestries.keys():
         if x[0] in y:
@@ -88,11 +96,12 @@ for x in Individual_Location:
 
 
 
+Sorted_IDs_Y = []
 
-
-
-
-
+for x in Individual_Location_Y_sorted:
+    for y in Individuals_to_Ancestries.keys():
+        if x[0] in y:
+            Sorted_IDs_Y.append(y)
 
 
 
@@ -100,22 +109,124 @@ for x in Individual_Location:
 ################################### Plotting
 #### Barplot
 
-fig, ax = plt.subplots()
-barWidth = 1.0
+
+num_samples = len(Sorted_IDs)
+barWidth = max(0.05, min(1.0, 8 / (num_samples ** 0.4)))
 barWidth_Add = 0
+edge_linewidth = max(0.1, barWidth * 0.55)
+
+
+
+fig, ax = plt.subplots()
 
 for ancestry in range(0,len(Genomewide_Ancestries)):
     BAR = [ Individuals_to_Ancestries[x][ancestry] for x in Sorted_IDs]
-    BAR_ID = [x + barWidth_Add for x in range(0,len(Sorted_IDs))]
+    BAR_ID = [x for x in range(0,len(Sorted_IDs))]
     
-    
-    plt.bar(BAR_ID, BAR, color = Colours_to_ancestries[Genomewide_Ancestries[ancestry]], width = barWidth, edgecolor ='black', label = F'Ancestry_{ancestry}')
-    #barWidth_Add += barWidth
+    plt.bar(BAR_ID, BAR, color = Colours_to_ancestries[Genomewide_Ancestries[ancestry]], width = barWidth, linewidth = edge_linewidth, edgecolor ='black', label = F'Ancestry_{ancestry}')
 
 plt.xlabel('Sampled Genomes Sorted by Position on X-axis', fontweight ='bold', fontsize = 13) 
 plt.ylabel('Ancestry Percentage', fontweight ='bold', fontsize = 13)
 plt.legend()
-plt.savefig(F"{Output_Folder}/Ancestry_Barplot.pdf")
+fig.tight_layout()
+plt.savefig(F"{Output_Folder}/Ancestry_Barplot.pdf", bbox_inches = 'tight')
+
+
+
+
+############### Same but sorted on the Y axis location
+
+fig, ax = plt.subplots()
+barWidth = 1.0
+barWidth_Add = 0
+
+base = plt.gca().transData
+rot = transforms.Affine2D().rotate_deg(-90)
+
+for ancestry in range(0,len(Genomewide_Ancestries)):
+    BAR = [ Individuals_to_Ancestries[x][ancestry] for x in Sorted_IDs_Y]
+    BAR_ID = [x + barWidth_Add for x in range(0,len(Sorted_IDs_Y))]
+    
+    
+    plt.bar(BAR_ID, BAR, color = Colours_to_ancestries[Genomewide_Ancestries[ancestry]], width = barWidth, linewidth = edge_linewidth, edgecolor ='black', label = F'Ancestry_{ancestry}', transform= rot + base)
+    #barWidth_Add += barWidth
+
+plt.ylabel('Sampled Genomes \nSorted by Position on Y-axis', fontweight ='bold', fontsize = 13) 
+plt.xlabel('Ancestry Percentage', fontweight ='bold', fontsize = 13)
+plt.legend()
+
+fig.tight_layout()
+plt.savefig(F"{Output_Folder}/Ancestry_Barplot_Y_sorted.pdf", bbox_inches = 'tight')
+
+
+
+
+
+
+
+
+
+
+#### Coloured Dots Based on Ancestry Percentage
+
+
+# Dot_size = min(5.0, 8 / (num_samples ** 0.4))
+Dot_size = 20.0
+edge_linewidth = Dot_size * 0.05
+max_width = round(max(Individual_Location, key = lambda x: x[1])[1]) ### maximum X axis position, rounded
+max_height = round(max(Individual_Location, key = lambda x: x[2])[2]) ### maximum Y axis position, rounded
+
+for ancestry in range(0,len(Genomewide_Ancestries)):
+    
+    fig, ax = plt.subplots(figsize=(10, 8))
+    padding = 1.0
+    ax.set_xlim(-padding, max_width + padding)
+    ax.set_ylim(-padding, max_height + padding)
+    ax.set_aspect('equal')
+    
+    
+    for x in Individual_Location:
+        
+        
+        Location_X = float(x[1])
+        Location_Y = float(x[2])
+        ID = x[0]
+        
+        Haplotypes_Percentage = [ float(Individuals_to_Ancestries[x][ancestry]) for x in Individuals_to_Ancestries.keys() if x.split('_')[1] == ID ]
+        Percentage_for_Individual = sum(Haplotypes_Percentage) / len(Haplotypes_Percentage)
+        
+        base_color = Colours_to_ancestries[Genomewide_Ancestries[ancestry]]
+        face_rgba = mcolors.to_rgba(base_color, alpha = Percentage_for_Individual)
+        edge_rgba = mcolors.to_rgba('black', alpha = 1.0)
+        
+        ax.scatter(Location_X, Location_Y, facecolors = face_rgba, s = Dot_size, edgecolors = edge_rgba , linewidth = edge_linewidth)
+    
+    
+    ancestry_cmap = mcolors.LinearSegmentedColormap.from_list("AncestryAlpha", [mcolors.to_rgba(base_color, alpha = 0.0), mcolors.to_rgba(base_color, alpha = 1.0)] )
+    norm = mcolors.Normalize(vmin = 0.0, vmax = 1.0)
+    scalar_mappable = plt.cm.ScalarMappable(cmap = ancestry_cmap, norm = norm)
+    cbar = fig.colorbar(scalar_mappable, ax = ax, shrink = 0.25)
+    cbar.set_label('Proportion of Ancestry', fontweight = 'bold', fontsize = 8)
+
+    
+    
+    
+    
+    
+    
+    
+    
+    plt.title(F'Spatial percentage of Ancestry {Genomewide_Ancestries[ancestry]}', fontsize = 12, pad = 14)
+    plt.ylabel('Y Location', fontweight ='bold', fontsize = 8) 
+    plt.xlabel('X Location', fontweight ='bold', fontsize = 8)
+
+    fig.tight_layout()
+    plt.savefig(F"{Output_Folder}/ScatterPlot_Coloured_by_Ancestry_{Genomewide_Ancestries[ancestry]}.pdf", bbox_inches = 'tight')
+
+
+
+
+
 
 
 

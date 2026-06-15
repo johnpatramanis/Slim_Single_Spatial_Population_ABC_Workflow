@@ -18,13 +18,6 @@ if len(sys.argv) >= 3:
     
     Number_of_Samples = int(sys.argv[2])
 
-
-
-
-
-
-
-
 Sampled_Individuals_Last_Gen = [] ### This list will have the SlimIDs of the individuals from the last generation that have been sampled
 
 
@@ -35,21 +28,18 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
     
     ts = tskit.load(F"{Folder}/Spatial_Simulations_SLim.trees/{tree_file}") ### Load the chromosomal tree sequence here
     
+    
+    
     ##### Find out how many ticks the simulation run for
     times = np.unique(ts.tables.nodes.time)
     oldest_time = times[-1]
     
     ##### Select Individuals from Last generation
-    ids_at_zero = np.where(ts.tables.nodes.time == 0)[0]
-    Last_Gen = [ts.node(i) for i in ids_at_zero] ### Subsample only to last generation, avoid empty genomes
+    Last_Gen = np.where(ts.tables.nodes.time == 0)[0] ### Subsample only to last generation, avoid empty genomes
     
     ###### Note! is_vacant == 0 are males haplosomes (half genome) with the Y and MT, is_vacant==56 are males haplosomes without Y and MT, and is_vacant==16 are femae haplosomes with MT and is_vacant==48 are female haplosomes without MT
     
-    
-    
-    ####### Samping Scheme!
-    ##### Randomly pick XX individuals from final generation (or less if not enough)
-    
+
     ##
     ##### if sampling has already occured once, use the IDs, so the same individuals are sampled for the different chromosomes
     if Sampled_Individuals_Last_Gen != []:
@@ -76,71 +66,59 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
         
         #### Keep record of sampled individuals to be resampled in the other chromosomes
         for sample in Last_Gen_SubSample:
-            Sampled_Individuals_Last_Gen.append(sample.individual)
+            Sampled_Individuals_Last_Gen.append(ts.tables.nodes.individual[sample])
         Sampled_Individuals_Last_Gen = list(set(Sampled_Individuals_Last_Gen))
         
 
     
-    
     #### Select Individuals from First Slim Generation
-    ids_at_oldest_time = np.where(ts.tables.nodes.time == oldest_time)[0]
-    First_Gen = [ts.node(i) for i in ids_at_oldest_time] ### Subsample to last generation, avoid empty genomes
+    First_Gen = np.where(ts.tables.nodes.time == oldest_time)[0] ### Subsample to last generation,
     
     
-    ### Dictionary linking First Gen Inds to their population
-    First_gen_lookup = {node.id: node.population for node in First_Gen}
     
     ###### Note! is_vacant == 0 are males haplosomes (half genome) with the Y and MT, is_vacant==56 are males haplosomes without Y and MT, and is_vacant==16 are femae haplosomes with MT and is_vacant==48 are female haplosomes without MT
     #### List with true or false for vacancy of every node in this chromosome
-    Is_vacant_list = [pyslim.node_is_vacant(ts, IND) for IND in Last_Gen_SubSample]
+    Is_vacant_list = [pyslim.node_is_vacant(ts, ts.node(node)) for node in Last_Gen_SubSample]
 
     ### List of lists, here every individual has an entry, with their ancestry for every tree
     Last_Gen_Ancestry_Matrix = [[] for i in Last_Gen_SubSample ]
     Tree_Intervals = []
     
+    
     for tree_here in ts.trees(): ### For each tree in the chromosome
+        
         
         Tree_Intervals.append(str(tree_here.interval.right))
         
-        Tree_Local_Look_Up = {node.id: node.population for node in First_Gen}
-            
-        
         for indiv_index in range(0,len(Last_Gen_SubSample)): ### For each Individual in the final generation (present)
             
-            Nodes_Traversed = []
-            IND = Last_Gen_SubSample[indiv_index] ### get individual
-
+            
+            
             if Is_vacant_list[indiv_index]: ### Ignore vacant nodes (e.g. mitochondrial, Y, X chromosomes)
                 continue
             
-            Curr_node = IND.id
-            Ancestry = ''
+            Curr_node = Last_Gen_SubSample[indiv_index] ### get node of individual
+            Anc_Found = False
+            counter = 0
+            ####### Go through every member of generation 1 and find ancestor of current tree, of current individual 
             
-            
-            ###### cycle through parents of this individuals, going up the tree, getting the nodeID until you encounter "-1", which means you are at root
-            while Curr_node != -1:
+            while Anc_Found == False:
                 
-                ###### if this node belongs to 1st generation, bingo, get the ancestry of that parent
-                if Curr_node in Tree_Local_Look_Up:
-                    
-                    Ancestry = Tree_Local_Look_Up[Curr_node]
-                    
-                    ### Add all nodes traversed so far to the lookup with the ancestry found
-                    for ND in Nodes_Traversed:
-                        Tree_Local_Look_Up[ND] = Ancestry
-                    
-                    break
-                ###
-                Nodes_Traversed.append(Curr_node)
-                ### otherwise keep going up the parentage    
-                Curr_node = tree_here.parent(Curr_node)
-            
-            
-            ## Append the result if an ancestor was found
+                Anc = First_Gen[counter]
+                if ( tree_here.is_descendant(Curr_node, Anc) == True ):
+                
+                    Ancestor = ts.node(Anc)
+                    Ancestry = Ancestor.population ### What pop did ancestor belong to?
+                    Anc_Found = True
+                counter+=1                
+                
+                # Append the result if an ancestor was found
             Last_Gen_Ancestry_Matrix[indiv_index].append(str(Ancestry))
-
-        #print(F"Assigned Tree number {tree_here.index} of {len(ts.trees())}")
-        
+                
+            
+            
+        print(F"Assigned Tree number {tree_here.index} of {len(ts.trees())}")
+    
     print(F"Simulation in {Folder}, {Chromosome_Name}, {(indiv_index+1)/2} Individuals had their ancestry assigned! ")        
             
     Chromosome_Ancestry_Output = open(F'{Folder}/{Chromosome_Name}.anc','w') ### Output for this Simulation run and this chromosome     

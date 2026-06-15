@@ -406,7 +406,7 @@ for Simulation_Folder in Simulation_Folders:
     ### Because perhaps not all ancestries are found in all simulations
     Ancestries_This_Sim = Ancestry_Percentage_File.readline().strip().split(':')[1]
     Ancestries_This_Sim = Ancestries_This_Sim.split(',')
-    Ancestries_This_Sim = [x for x in Ancestries_This_Sim if x!='' ]
+    Ancestries_This_Sim = [ x for x in Ancestries_This_Sim if x!='' ]
 
 
     
@@ -455,7 +455,6 @@ for Simulation_Folder in Simulation_Folders:
             Ind_to_Ancestry_Mean_Length[INDIVIDUAL_ID][Ac] = Mean_Length
             Ind_to_Ancestry_Mean_Variance[INDIVIDUAL_ID][Ac] = Mean_Variance_of_Lengths
             
-
 
 
 
@@ -584,6 +583,8 @@ for X_axis in range(0, N_X_Boxes):
             #### For each ancestry, calculate percentage of the genome for this individual
             for ANC in Total_Ancestries:
                 
+                
+                
                 if ANC in Ind_to_Ancestry_Percentages[IND].keys():
                     
                     Value = float( Ind_to_Ancestry_Percentages[IND][ANC] / Total_Genome )
@@ -653,6 +654,8 @@ for X_axis in range(0, N_X_Boxes):
             #### For each ancestry, calculate percentage of the genome for this individual
             for ANC in Total_Ancestries:
                 
+                ANC = str(ANC)
+                
                 if ANC in Ind_to_Ancestry_Mean_Length[IND].keys():
                     
                     Value = float(Ind_to_Ancestry_Mean_Length[IND][ANC])
@@ -664,31 +667,39 @@ for X_axis in range(0, N_X_Boxes):
                 
                 #### add a point of this ancestry to list
                 POINTS.append([ str(ANC), Value ])
-
+    
 
         
         ### convert to Pandas dataframe, because seaborn LOVES them
         df = pd.DataFrame(POINTS, columns=["Ancestry", "Mean Length"])
         
-        #### ### Generate striplot
-        sns.stripplot(data=df, x = "Ancestry", y = "Mean Length", jitter = 0.35, hue="Ancestry", size = 2.5,alpha = 0.5, palette=Colours_to_ancestries, ax = axs[ Y_axis, X_axis ])
         
         
-        #### Generate Boxplot ontop of it
+        
+        
+        #### Generate Boxplot 
         sns.boxplot(data = df, x = "Ancestry", y = "Mean Length", showcaps = True, hue = "Ancestry" ,
         boxprops = {'edgecolor': 'black','alpha': 0.75},
         palette = Colours_to_ancestries,
         whiskerprops = {'linewidth': 1},
         showfliers = False,
         ax = axs[ Y_axis, X_axis ])
+        
+        ##### Fix plot a bit
+        # ylims = axs[Y_axis, X_axis].get_ylim()
+        # axs[Y_axis, X_axis].set_ylim(ylims)
+        axs[Y_axis, X_axis].set_yscale("log", nonpositive='mask')
         axs[Y_axis, X_axis].set_xlabel("")
         axs[Y_axis, X_axis].set_ylabel("")
         
+        #### ### Generate striplot on top of it
+        sns.stripplot(data=df, x = "Ancestry", y = "Mean Length", jitter = 0.35, hue="Ancestry", size = 2.5,alpha = 0.5, palette = Colours_to_ancestries, ax = axs[ Y_axis, X_axis ])
+        # axs[Y_axis, X_axis].set_yscale("log", nonpositive='mask')
         ### next box
         counter+=1
 
 fig.supxlabel("Ancestry")
-fig.supylabel("Mean length of ancestry segment")
+fig.supylabel("Logscaled mean length of ancestry segments")
 plt.tight_layout(rect=[0.01, 0.01, 1.0, 1.0])
 plt.savefig(F"{Output_Folder}/Ancestry_Mean_Lengths_Boxes_of_{Size_of_Box}.pdf", format="pdf")
 
@@ -744,13 +755,15 @@ for X_axis in range(0, N_X_Boxes):
         whiskerprops = {'linewidth': 1},
         showfliers = False,
         ax = axs[ Y_axis, X_axis ])
+        axs[Y_axis, X_axis].set_yscale("log", nonpositive='mask')
         axs[Y_axis, X_axis].set_xlabel("")
         axs[Y_axis, X_axis].set_ylabel("")
+        
         
         ### next box
         counter+=1
 
 fig.supxlabel("Ancestry")
-fig.supylabel("Mean variance of length of ancestry segments")
+fig.supylabel("Logscaled mean variance of lengths of ancestry segments")
 plt.tight_layout(rect=[0.01, 0.01, 1.0, 1.0])
 plt.savefig(F"{Output_Folder}/Ancestry_Mean_Variance_of_Lengths_Boxes_of_{Size_of_Box}.pdf", format="pdf")

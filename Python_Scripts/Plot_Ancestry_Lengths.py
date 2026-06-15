@@ -6,6 +6,7 @@ import sys
 import os
 import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import numpy as np
 
 
@@ -101,9 +102,13 @@ for x in Individual_Location:
 
 
 
+###### Scale things to number of samples
+num_samples = len(Sorted_IDs)
+BAR_ID = list(range(0, num_samples))
 
-
-
+box_linewidth = max(0.1, min(1.5, 4.0 / (num_samples ** 0.5)))
+tick_labelsize = max(2, min(12, 25 / (num_samples ** 0.4)))
+barWidth = max(0.05, min(1.0, 8 / (num_samples ** 0.4)))
 
 
 
@@ -111,31 +116,29 @@ for x in Individual_Location:
 #### Barplots
 
 fig, ax = plt.subplots()
-barWidth = 1.0
-barWidth_Add = 0
-
 
 
 for ancestry in range(0,len(Genomewide_Ancestries)):
     MEAN_LENGTH_BAR = [ Individuals_to_Ancestries[x][Genomewide_Ancestries[ancestry]][0] for x in Sorted_IDs]
     BAR_ID = [x  for x in range(0,len(Sorted_IDs))]
         
-    plt.bar(BAR_ID, MEAN_LENGTH_BAR, color = Colours_to_ancestries[Genomewide_Ancestries[ancestry]], width = barWidth, edgecolor ='black', label = F'Ancestry_{ancestry}')
+    plt.bar(BAR_ID, MEAN_LENGTH_BAR, color = Colours_to_ancestries[Genomewide_Ancestries[ancestry]], width = barWidth, edgecolor ='black', label = F'Ancestry_{ancestry}', )
     
     
-plt.xlabel('ID of Sampled Genomes Sorted by Position on X-axis', fontweight ='bold', fontsize = 13)
-ax.tick_params("x", labelsize = 6 , rotation = 45)
+plt.xlabel('Sampled Genomes Sorted by Position on X-axis', fontweight ='bold', fontsize = 13)
+ax.tick_params("x", labelsize = tick_labelsize , rotation = 90)
 plt.ylabel('Mean Length of Ancestry Segments', fontweight ='bold', fontsize = 13)
 plt.legend()
 plt.savefig(F"{Output_Folder}/Mean_Length_of_Ancestry_Barplot.pdf")
+fig.tight_layout()
+
 
 
 
 #### Barplot 2
 
 fig, ax = plt.subplots()
-barWidth = 1.0
-barWidth_Add = 0
+
 
 for ancestry in range(0,len(Genomewide_Ancestries)):
     
@@ -145,8 +148,8 @@ for ancestry in range(0,len(Genomewide_Ancestries)):
 
     plt.bar(BAR_ID, VAR_LENGTH_BAR, color = Colours_to_ancestries[Genomewide_Ancestries[ancestry]], width = barWidth, edgecolor ='black', label = F'Ancestry_{ancestry}')
     
-plt.xlabel('ID of Sampled Genomes Sorted by Position on X-axis', fontweight ='bold', fontsize = 13)
-ax.tick_params("x", labelsize = 6 , rotation=45) 
+plt.xlabel('Sampled Genomes Sorted by Position on X-axis', fontweight ='bold', fontsize = 13)
+ax.tick_params("x", labelsize = tick_labelsize , rotation = 90)
 plt.ylabel('Variance of Ancestry Segments', fontweight ='bold', fontsize = 13)
 plt.legend()
 plt.savefig(F"{Output_Folder}/Variance_of_Ancestry_Lengths_Barplot.pdf")   
@@ -192,7 +195,7 @@ for ancestry in range(0,len(Genomewide_Ancestries)):
     LENGTHS = [ Individuals_to_Ancestries_Full_D[x][Genomewide_Ancestries[ancestry]] for x in Sorted_IDs]
     BAR_ID = [x  for x in range(0,len(Sorted_IDs))]
 
-    
+
     bp1 = ax.boxplot(LENGTHS, positions = BAR_ID, sym = '', showfliers = False, showmeans = False, patch_artist = True) ### widths=0.4
     
     
@@ -202,113 +205,15 @@ for ancestry in range(0,len(Genomewide_Ancestries)):
     for item in ['boxes', 'whiskers', 'fliers', 'medians', 'caps', 'means']:
             plt.setp(bp1[item], color = Colour_Main)
     plt.setp(bp1['boxes'], color="black") ### linewidth=0.8
-    plt.setp(bp1['boxes'], facecolor = Colour_Main)
-    plt.setp(bp1["medians"], color="black")
+    plt.setp(bp1['boxes'], facecolor = Colour_Main, linewidth = box_linewidth)
+    plt.setp(bp1["medians"], color="black", linewidth = box_linewidth)
     plt.setp(bp1["means"], color="black")
+    ax.xaxis.set_major_locator(ticker.AutoLocator())
+    plt.xlabel('Samples Sorted by Position on X-axis', fontweight ='bold', fontsize = 13)
+    ax.tick_params("x", labelsize = tick_labelsize , rotation = 90, labelbottom=False)
 
-    plt.xlabel('ID of Sampled Genomes Sorted by Position on X-axis', fontweight ='bold', fontsize = 13)
-    ax.tick_params("x", labelsize = 6 , rotation=45)
-    plt.ylabel(F'Distribution of Lengths of Ancestry {Genomewide_Ancestries[ancestry]} Segments', fontweight ='bold', fontsize = 13)
-    plt.savefig(F"{Output_Folder}/Distribution_of_Ancestry_{Genomewide_Ancestries[ancestry]}_Lengths_Boxplot.pdf")   
-
-
-
-
-
-#### Painted Map
+    plt.ylabel(F'Distribution of Lengths of \nAncestry {Genomewide_Ancestries[ancestry]} Segments', fontweight ='bold', fontsize = 13)
+    fig.tight_layout()
+    plt.savefig(F"{Output_Folder}/Distribution_of_Ancestry_{Genomewide_Ancestries[ancestry]}_Lengths_Boxplot.pdf", bbox_inches='tight')   
 
 
-##### Figure out best width and height for this group of individuals
-# max_width = round(max(Individual_Location, key = lambda x: x[1])[1])### maximum X axis position, rounded
-# max_height = round(max(Individual_Location, key = lambda x: x[2])[2]) ### maximum Y axis position, rounded
-
-## add a bit until its divisable by 5 (arbitary, but makes plots nicer)
-# while max_height%5 !=0:
-    # max_height+=1
-
-# while max_width%5 !=0:
-    # max_width+=1
-
-# print(F"Maximum width for this space is: {max_width} and maximum height is: {max_height}\n")
-
-
-
-##### Create spatial boxes of 5x5
-
-# N_X_Boxes = int(max_width/5) ## Number of bins/boxes in X axis
-# N_Y_Boxes = int(max_height/5) ## Number of bins/boxes in Y axis
-# N_Boxes = N_X_Boxes * N_Y_Boxes ## Number of total bins/boxes
-
-##### Seperate all individuals into spatial boxes of 5x5
-
-# BOXES = []
-
-    
-# for X_DIM in range(5,max_width+5,5):
-    # for Y_DIM in range(5,max_height+5,5):
-        
-        # BOX_HERE = [ ]
-        
-        # for IND in Individual_Location:
-            
-            # IND_X = IND[1]
-            # IND_Y = IND[2]
-            
-            # HAPS = [x for x in Individuals_to_Ancestries.keys() if (IND[0] == x.split('_')[1] ) ] ## haplotypes of individual
-            
-            # if (IND_X >= X_DIM-5) and (IND_Y >= Y_DIM-5) and (IND_X < X_DIM) and (IND_Y < Y_DIM):
-                
-                # for HAP in HAPS:
-                    # BOX_HERE.append(Individuals_to_Ancestries[HAP]) ### ancestry proportions of each haplotype
-
-
-        ## if no individual sampled in box, add an individual with 0 ancestry for every ancestry
-        # if BOX_HERE == []:
-            # BOX_HERE.append( [0 for x in Ancestries] )
-            
-        ## add this 5x5 box to the totality of boxes    
-        # BOXES.append(BOX_HERE)
-        
-
- 
-# for ANCESTRY_IN_QUESTION in range(0,len(Ancestries)):
-    
-    # ANCESTRY_IN_BOXES = [ float(np.mean([y[ANCESTRY_IN_QUESTION] for y in x ])) for x in BOXES ] ### get average ancestry in question for each box
-    ## ^^Should be a list of floats, length == N_Boxes
-    ## print(ANCESTRY_IN_BOX,len(ANCESTRY_IN_BOX))
-    # Colour_Map_Name = Colour_Maps_to_Ancestries[Genomewide_Ancestries[ANCESTRY_IN_QUESTION]]
-    
-
-    # Z = []
-    # counter = 0
-    
-    
-    # for X_DIM in range(5,max_width+5,5):
-        # X_ROW = []
-        
-        # for Y_DIM in range(5,max_height+5,5):
-            
-            # X_ROW.append(ANCESTRY_IN_BOXES[counter])
-            # counter += 1
-            
-        # Z.append(X_ROW)    
-        
-    # FOR_PLOTTING_X = [ X_DIM - 2.5 for X_DIM in range(0,max_width+5,5)  ]
-    # FOR_PLOTTING_Y = [ Y_DIM - 2.5 for Y_DIM in range(0,max_height+5,5) ]
-
-    
-    
-    # X,Y = np.meshgrid(np.array(FOR_PLOTTING_X), np.array(FOR_PLOTTING_Y))
-    # Z = np.array(Z)
-    
-    
-    # fig, ax = plt.subplots()
-    # C = ax.pcolormesh(X, Y , Z.T, shading = 'auto', rasterized = True, cmap = Colour_Map_Name)
-    
-    # plt.title(F"Spatial Distribution of Ancestry {Genomewide_Ancestries[ANCESTRY_IN_QUESTION]}")
-    # plt.xlabel('Position on X axis', fontweight ='bold', fontsize = 13)
-    # plt.ylabel('Position on Y axis', fontweight ='bold', fontsize = 13)
-    # fig.colorbar(C)
-
-    ### plt.legend()
-    # plt.savefig(F"{Output_Folder}/Ancestry_{Genomewide_Ancestries[ANCESTRY_IN_QUESTION]}_Spatial_Distribution.pdf")
