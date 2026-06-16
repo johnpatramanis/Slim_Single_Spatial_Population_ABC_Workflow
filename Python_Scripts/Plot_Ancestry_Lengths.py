@@ -128,6 +128,7 @@ for ancestry in range(0,len(Genomewide_Ancestries)):
 plt.xlabel('Sampled Genomes Sorted by Position on X-axis', fontweight ='bold', fontsize = 13)
 ax.tick_params("x", labelsize = tick_labelsize , rotation = 90)
 plt.ylabel('Mean Length of Ancestry Segments', fontweight ='bold', fontsize = 13)
+plt.title(F'Mean Length of Ancestry', fontsize = 12, pad = 14, fontweight ='bold')
 plt.legend()
 plt.savefig(F"{Output_Folder}/Mean_Length_of_Ancestry_Barplot.pdf")
 fig.tight_layout()
@@ -151,6 +152,7 @@ for ancestry in range(0,len(Genomewide_Ancestries)):
 plt.xlabel('Sampled Genomes Sorted by Position on X-axis', fontweight ='bold', fontsize = 13)
 ax.tick_params("x", labelsize = tick_labelsize , rotation = 90)
 plt.ylabel('Variance of Ancestry Segments', fontweight ='bold', fontsize = 13)
+plt.title(F'Variance of Ancestry Length', fontsize = 12, pad = 14, fontweight ='bold')
 plt.legend()
 plt.savefig(F"{Output_Folder}/Variance_of_Ancestry_Lengths_Barplot.pdf")   
 
@@ -212,7 +214,8 @@ for ancestry in range(0,len(Genomewide_Ancestries)):
     plt.xlabel('Samples Sorted by Position on X-axis', fontweight ='bold', fontsize = 13)
     ax.tick_params("x", labelsize = tick_labelsize , rotation = 90, labelbottom=False)
 
-    plt.ylabel(F'Distribution of Lengths of \nAncestry {Genomewide_Ancestries[ancestry]} Segments', fontweight ='bold', fontsize = 13)
+    plt.ylabel(F'Lengths of Ancestry {Genomewide_Ancestries[ancestry]} Segments in BP', fontweight ='bold', fontsize = 13)
+    plt.title(F'Distribution of Lengths for \nSegments of Ancestry {Genomewide_Ancestries[ancestry]}',fontweight ='bold', fontsize = 12, pad = 14)
     fig.tight_layout()
     plt.savefig(F"{Output_Folder}/Distribution_of_Ancestry_{Genomewide_Ancestries[ancestry]}_Lengths_Boxplot.pdf", bbox_inches='tight')   
 

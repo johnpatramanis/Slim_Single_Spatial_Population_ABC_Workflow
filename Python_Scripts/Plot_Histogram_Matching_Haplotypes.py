@@ -202,8 +202,9 @@ for ANC in sorted(ANCESTRIES.keys()):
             counter+=1
 
     
-
-    
+    plt.xlabel('Individual genomes sorted by position on X axis\n(left to right)', fontweight ='bold', fontsize = 13)
+    plt.ylabel('Individual genome sorted by position on X axis\n(top to bottom)', fontweight ='bold', fontsize = 13)
+    plt.title(F'Heatmap of similarity of\n Ancestry {Ancestry} segments', fontsize = 12, pad = 14, fontweight ='bold')
     plt.imshow(Sim_matrix, cmap='hot', interpolation='nearest')
     plt.savefig(F"{Output_Folder}/Ancestry_{ANC}_Similarity_Heatmap.pdf")
     

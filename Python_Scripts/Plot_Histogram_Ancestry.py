@@ -129,6 +129,7 @@ plt.xlabel('Sampled Genomes Sorted by Position on X-axis', fontweight ='bold', f
 plt.ylabel('Ancestry Percentage', fontweight ='bold', fontsize = 13)
 plt.legend()
 fig.tight_layout()
+plt.title(F'Percentage of Ancestry per Individual\nSorted by position on the X axis',fontweight ='bold', fontsize = 12, pad = 14)
 plt.savefig(F"{Output_Folder}/Ancestry_Barplot.pdf", bbox_inches = 'tight')
 
 
@@ -150,7 +151,8 @@ for ancestry in range(0,len(Genomewide_Ancestries)):
     
     plt.bar(BAR_ID, BAR, color = Colours_to_ancestries[Genomewide_Ancestries[ancestry]], width = barWidth, linewidth = edge_linewidth, edgecolor ='black', label = F'Ancestry_{ancestry}', transform= rot + base)
     #barWidth_Add += barWidth
-
+    
+plt.title(F'Percentage of Ancestry per Individual\nSorted by position on the Y axis',fontweight ='bold', fontsize = 12, pad = 14)
 plt.ylabel('Sampled Genomes \nSorted by Position on Y-axis', fontweight ='bold', fontsize = 13) 
 plt.xlabel('Ancestry Percentage', fontweight ='bold', fontsize = 13)
 plt.legend()
@@ -216,7 +218,7 @@ for ancestry in range(0,len(Genomewide_Ancestries)):
     
     
     
-    plt.title(F'Spatial percentage of Ancestry {Genomewide_Ancestries[ancestry]}', fontsize = 12, pad = 14)
+    plt.title(F'Spatial percentage of Ancestry {Genomewide_Ancestries[ancestry]}',fontweight ='bold', fontsize = 12, pad = 14)
     plt.ylabel('Y Location', fontweight ='bold', fontsize = 8) 
     plt.xlabel('X Location', fontweight ='bold', fontsize = 8)
 
@@ -316,8 +318,8 @@ for ANCESTRY_IN_QUESTION in range(0,len(Ancestries)):
             
         Z.append(X_ROW)    
         
-    FOR_PLOTTING_X = [ X_DIM - Size_of_Box/2 for X_DIM in range(0, max_width + Size_of_Box, Size_of_Box)  ]
-    FOR_PLOTTING_Y = [ Y_DIM - Size_of_Box/2 for Y_DIM in range(0, max_height + Size_of_Box, Size_of_Box) ]
+    FOR_PLOTTING_X = [ X_DIM for X_DIM in range(0, max_width + Size_of_Box, Size_of_Box)  ]
+    FOR_PLOTTING_Y = [ Y_DIM for Y_DIM in range(0, max_height + Size_of_Box, Size_of_Box) ]
 
     
     
@@ -325,13 +327,19 @@ for ANCESTRY_IN_QUESTION in range(0,len(Ancestries)):
     Z = np.array(Z)
     
     
-    fig, ax = plt.subplots()
-    C = ax.pcolormesh(X, Y , Z.T, shading = 'auto', rasterized = True, cmap = Colour_Map_Name)
+    fig, ax = plt.subplots(figsize=(10, 8))
+    padding = 1.0
+    ax.set_xlim(-padding, max_width + padding)
+    ax.set_ylim(-padding, max_height + padding)
+    ax.set_aspect('equal')
     
-    plt.title(F"Spatial Distribution of Ancestry {Genomewide_Ancestries[ANCESTRY_IN_QUESTION]}")
-    plt.xlabel('Position on X axis', fontweight ='bold', fontsize = 13)
-    plt.ylabel('Position on Y axis', fontweight ='bold', fontsize = 13)
-    fig.colorbar(C)
-
+    C = ax.pcolormesh(X, Y , Z.T, shading = 'auto', rasterized = True, cmap = Colour_Map_Name)
+    plt.title(F"Spatial Distribution of Ancestry {Genomewide_Ancestries[ANCESTRY_IN_QUESTION]}",fontweight ='bold', fontsize = 12, pad = 14)
+    plt.xlabel('Position of Box on X axis\n(right border)', fontweight ='bold', fontsize = 13)
+    plt.ylabel('Position of Box on Y axis\n(top border)', fontweight ='bold', fontsize = 13)
+    cbar = fig.colorbar(C, ax = ax, shrink = 0.25)
+    cbar.set_label('Average Ancestry within Box', fontweight = 'bold', fontsize = 8)
+    
+    
     #### plt.legend()
     plt.savefig(F"{Output_Folder}/Ancestry_{Genomewide_Ancestries[ANCESTRY_IN_QUESTION]}_Spatial_Distribution.pdf")

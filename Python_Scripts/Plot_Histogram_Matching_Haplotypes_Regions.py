@@ -211,6 +211,9 @@ for X_DIM in range(Size_of_Box,max_width + Size_of_Box, Size_of_Box): ### left t
 
 fig, ax = plt.subplots()
 
+box_labels = [F"{int(box[1])},{int(box[2])}" for box in BOXES]
+
+
 
 ##### For each ancestry
 
@@ -269,14 +272,30 @@ for Ancestry in sorted(ANCESTRIES.keys()):
             
             ### Add location of each pair
             Locations = PAIRED_BOXES_LOCATION[counter]
-            ax.text(j, i, Locations, ha='center',va='center',color='black',fontsize=0.05,rotation=-45,rotation_mode='anchor')
+            ### ax.text(j, i, Locations, ha='center',va='center',color='black',fontsize=0.05,rotation=-45,rotation_mode='anchor')
             counter+=1
     
     
-    plt.xticks([x+0.5 for x in range(0,Max_Dim)], [x for x in range(Size_of_Box, Size_of_Box*Max_Dim + Size_of_Box, Size_of_Box)], rotation=45)
-    plt.yticks([x+0.5 for x in range(0,Max_Dim)], [x for x in range(Size_of_Box, Size_of_Box*Max_Dim + Size_of_Box, Size_of_Box)])
+    # plt.xticks([x + 0.5 for x in range(0, Max_Dim)], [x for x in range(Size_of_Box, Size_of_Box * Max_Dim + Size_of_Box, Size_of_Box)], rotation=45)
+    # plt.yticks([x + 0.5 for x in range(0, Max_Dim)], [x for x in range(Size_of_Box, Size_of_Box * Max_Dim + Size_of_Box, Size_of_Box)])
     
-    plt.imshow(Sim_matrix, cmap='hot', interpolation='nearest')
+    ### Ticks to middle of each box
+    tick_positions = np.arange(Max_Dim)
+    # Apply Xaxis ticks and labels
+    ax.set_xticks(tick_positions)
+    ax.set_xticklabels(box_labels, rotation=45, fontsize=8)
+    
+    # Apply Yaxis ticks and labels
+    ax.set_yticks(tick_positions)
+    ax.set_yticklabels(box_labels, fontsize=8)
+
+    
+    plt.xlabel('X, Y position of Box', fontweight ='bold', fontsize = 13)
+    plt.ylabel('X, Y position of Box', fontweight ='bold', fontsize = 13)
+    plt.tight_layout()
+    plt.title(F'Heatmap of similarity of\n Ancestry {Ancestry} segments\n grouped in Boxes of Size {Size_of_Box}', fontsize = 12, pad = 14, fontweight ='bold')
+    plt.imshow(Sim_matrix, cmap = 'hot', interpolation = 'nearest')
+    
     
     
     

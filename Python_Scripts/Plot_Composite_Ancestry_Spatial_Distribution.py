@@ -174,7 +174,7 @@ for ANC in Ancestries_Here:
             
             Percentage_of_Coverage = Coverage/Total_Length
             
-            print(SAMPLE_ID, X_DIM, Y_DIM, Percentage_of_Coverage, ANC)
+            ### print(SAMPLE_ID, X_DIM, Y_DIM, Percentage_of_Coverage, ANC)
             
             ROW.append(Percentage_of_Coverage)
 
@@ -182,24 +182,27 @@ for ANC in Ancestries_Here:
             
         Z.append(ROW)    
         
-    FOR_PLOTTING_X = [ X_DIM - Size_of_Box/2 for X_DIM in range(0, max_width + Size_of_Box, Size_of_Box)  ]
-    FOR_PLOTTING_Y = [ Y_DIM - Size_of_Box/2 for Y_DIM in range(0, max_height + Size_of_Box, Size_of_Box) ]
+    FOR_PLOTTING_X = [ X_DIM for X_DIM in range(0, max_width + Size_of_Box, Size_of_Box)  ]
+    FOR_PLOTTING_Y = [ Y_DIM for Y_DIM in range(0, max_height + Size_of_Box, Size_of_Box) ]
     
     X,Y = np.meshgrid(np.array(FOR_PLOTTING_X), np.array(FOR_PLOTTING_Y))
     
     Z = np.array(Z).T
 
     
+    fig, ax = plt.subplots(figsize=(10, 8))
+    padding = 1.0
+    ax.set_xlim(-padding, max_width + padding)
+    ax.set_ylim(-padding, max_height + padding)
+    ax.set_aspect('equal')
     
-    
-    fig, ax = plt.subplots()
     C = ax.pcolormesh(X, Y, Z, shading = 'auto', rasterized = True, cmap = Colour_Maps_to_Ancestries[ANC])
     
-    plt.title(F"Completeness of Composite Genome of Ancestry {ANC}")
-    plt.xlabel('Position on X axis', fontweight ='bold', fontsize = 13)
-    plt.ylabel('Position on Y axis', fontweight ='bold', fontsize = 13)
-    fig.colorbar(C)
-    
-    plt.show()
-    ### plt.legend()
+    plt.title(F"Completeness of Composite Genome of Ancestry {ANC}",fontweight ='bold', fontsize = 12, pad = 14)
+    plt.xlabel('Position of Box on X axis\n(right border)', fontweight ='bold', fontsize = 13)
+    plt.ylabel('Position of Box on Y axis\n(top border)', fontweight ='bold', fontsize = 13)
+    cbar = fig.colorbar(C, ax = ax, shrink = 0.25)
+    cbar.set_label('Average Ancestry within Box', fontweight = 'bold', fontsize = 8)
+    plt.tight_layout()
+
     plt.savefig(F"{Output_Folder}/Composite_Ancestry_{ANC}_BoxSize_{Size_of_Box}_Spatial_Completeness.pdf")
