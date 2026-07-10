@@ -140,18 +140,40 @@ initialize() {
 
 }
 
+
+
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
+////////// Initial Generation Set Up
+
+
 1 first() {
+		
+
 	
 	/// Default model activator
 	DEFAULT_MODEL = 1;
 	
 	
 	
+	
+	
+	////////////////////////////////////////////////////////////////////////////////
 	//// Custom set up, will dieactivate default model if everything checks out
 	
-	if (!exists("Popualtion_Paramters")){
+	if (exists("Popualtion_Paramters")){
 	
 		print("Custom Population Model");
+		
+		
+		
+		
+		
+		DEFAULT_MODEL = 0;
 	
 	}
 	
@@ -163,7 +185,7 @@ initialize() {
 	
 	
 	
-	
+	//////////////////////////////////////////////////
 	///// Default set up
 	if (DEFAULT_MODEL){
 		
@@ -172,7 +194,7 @@ initialize() {
 		sim.addSubpop("p1", asInteger(500));  ////// add Initial population 
 		p1.setSpatialBounds(c(POP_1_WIDTH_MIN, POP_1_HEIGHT_MIN, POP_1_WIDTH_MAX, POP_1_HEIGHT_MAX));   /////// Add spatial bounds for population 1
 		p1.individuals.setSpatialPosition(p1.pointUniform(p1.individualCount));  ///// Place Individuals from pop1 into spatial boundaries of population 1
-
+		
 		
 		
 		/// Set up pop2
@@ -181,9 +203,9 @@ initialize() {
 		p2.individuals.setSpatialPosition(p2.pointUniform(p2.individualCount));  ///// Place Individuals from pop1 
 
 		
-		K_LIST = c(K,K);
-		RELEASE_LIST = c(1,0);
-		KILL_LIST = c(0,1);
+		Denisty_list = c(1.0,1.0);
+		Release_list = c(1,0);
+		Kill_List = c(0,1);
 	
 	
 	}
@@ -191,6 +213,16 @@ initialize() {
 
 
 
+
+	////////////////////////////////////////////////////////////
+
+	//// Lists to be used to control each population's fate, need to be defined as globals
+	
+	defineConstant("DENSITY_MULT_LIST", Denisty_list);
+	defineConstant("RELEASE_LIST", Release_list);
+	defineConstant("KILL_LIST", Kill_List);
+	
+	
 	
 	////// Record
 	//////
@@ -208,15 +240,30 @@ initialize() {
 
 
 
+
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////// Checkpoints - Events
+
+
 ///// Check which Populations have their boundaries removed
 
 REMOVE_BOUNDARIES first() {
 	
-	p1.setSpatialBounds(c(0, 0, WIDTH, HEIGHT)); //// min_width,min_height,max_width,max_height
-	///p2.setSpatialBounds(c(0, 0, 100, 25)); //// min_width,min_height,max_width,max_height
-	
-	
+	for (X in RELEASE_LIST, POP in sim.subpopulations){	/// Cycle through populations and list of popualtion to have their boundaries removed
+		
+		if (X){ /// If true for this population
+			
+			POP.setSpatialBounds(c(0, 0, WIDTH, HEIGHT)); //// min_width, min_height, max_width, max_height
+			
+			}
+		}
 }
+
 
 
 
@@ -225,10 +272,12 @@ REMOVE_BOUNDARIES first() {
 
 KILL_POP first(){
 	
-for (X in RELEASE_LIST, POP in sim.subpopulations){
+for (X in KILL_LIST, POP in sim.subpopulations){ /// Cycle through populations and list of popualtion to be terminated
 
-	if (X){
-		sim.killIndividuals(POP);
+	if (X){ /// If true for this population
+		
+		sim.killIndividuals(POP.individuals);
+		
 		}
 	}
 
@@ -241,6 +290,7 @@ for (X in RELEASE_LIST, POP in sim.subpopulations){
 
 ///// Calcualte Mating interactions
 first() {
+	
 	/// preparation for the reproduction() callback
 	for (POP in sim.subpopulations){
 		i20.evaluate(POP);
@@ -279,12 +329,15 @@ reproduction() { ///// Works for both populations
 			choice_of_species = c();
 			
 			for (pos_mate in possible_mates){
+				
 				if(individual.subpopulation == pos_mate.subpopulation){ /// if from same pop
 				choice_of_species = c(choice_of_species,SPECIESISM);		
 				}
+				
 				if(individual.subpopulation != pos_mate.subpopulation){ /// if from different pop
 				choice_of_species = c(choice_of_species, (1 - SPECIESISM) / (length(possible_mates)-1) );				
 				}
+			
 			}
 			mate = sample(possible_mates, 1, weights = choice_of_species); /// If list not empty, pick randomly
 		}
@@ -331,7 +384,7 @@ early() {
 	/// For each population
 	
 	
-	for (POP in sim.subpopulations){
+	for (POP in sim.subpopulations, Density_Multiplier in DENSITY_MULT_LIST){
 	
 		
 		
@@ -344,7 +397,6 @@ early() {
 		mortality = LifeTable[ages];
 		survival = 1 - mortality;		
 		
-		
 		//// Cycle through competition interactions (but not last one, which is mating interaction)
 		for (INTERACTION in community.allInteractionTypes[0:(length(community.allInteractionTypes)-2)] ){
 			
@@ -355,7 +407,7 @@ early() {
 		}
 		
 		//// print(c(length(competition),length(inds)));  /// these two should be identical
-		inds.fitnessScaling = pmin(0.95,( survival / (1 + RHO * competition)));
+		inds.fitnessScaling = pmin(0.95,( survival  / (1 + RHO * (1/Density_Multiplier) * competition)));
 		
 	}
 
