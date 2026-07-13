@@ -165,15 +165,58 @@ initialize() {
 	////////////////////////////////////////////////////////////////////////////////
 	//// Custom set up, will dieactivate default model if everything checks out
 	
-	if (exists("Popualtion_Paramters")){
+	if ( (exists("POP_INFO")) & (exists("NUMBER_OF_POPS")) ){
 	
-		print("Custom Population Model");
+		if( asInteger(NUMBER_OF_POPS) == size(POP_INFO.allKeys) ){ /// If user has provided the correct number of populations & population info combination (every population needs to have info for it)
+			
+		
+			//// Lists to append to 
+			Denisty_list = c();
+		    Release_list = c();
+		    Kill_List = c();
 		
 		
-		
-		
-		
-		DEFAULT_MODEL = 0;
+			
+			//// Loop to go through every population 
+			for (X in 1:asInteger(NUMBER_OF_POPS), KEY in POP_INFO.allKeys){
+				
+				//// X = Pop ID, POP_INFO.getValue(KEY) = Paramters of population
+				/// Get parameters for this pop
+				POP_K = POP_INFO.getValue(KEY).getValue("K");
+				POP_WMIN = POP_INFO.getValue(KEY).getValue("WMIN");
+				POP_WMAX = POP_INFO.getValue(KEY).getValue("WMAX");
+				POP_HMIN = POP_INFO.getValue(KEY).getValue("HMIN");
+				POP_HMAX = POP_INFO.getValue(KEY).getValue("HMAX");
+				POP_REMVBND = POP_INFO.getValue(KEY).getValue("REMVBND");
+				POP_KILL = POP_INFO.getValue(KEY).getValue("KILL");
+				
+				
+				//// Set Up Population
+				
+				sim.addSubpop("p" + X, asInteger( POP_K * K * (POP_WMAX - POP_WMIN) * (POP_HMAX - POP_HMIN) )); //// Create population with a population seeded with a roughg number of individuals relative to the space they occupy
+				POP_ID = sim.subpopulations[X-1];  /// select current population
+				POP_ID.setSpatialBounds(c(POP_WMIN, POP_HMIN, POP_WMAX, POP_HMAX));  ////  Add spatial bounds for this population
+				POP_ID.individuals.setSpatialPosition(POP_ID.pointUniform(POP_ID.individualCount));
+				
+				
+				
+				//// Add the K multiplier, Whether or not it is 'released' and whether or not it is 'Killed' to the lists
+				
+				Denisty_list = c(Denisty_list, POP_K);
+				Release_list = c(Release_list, POP_REMVBND);
+				Kill_List = c(Kill_List, POP_KILL);
+				
+				
+				
+				
+			}
+			
+			
+			////// Set to False, so the Default loop does not kick in and the custom model runs
+			print("Custom Population Model");
+			DEFAULT_MODEL = 0;
+			
+		}
 	
 	}
 	
@@ -187,7 +230,7 @@ initialize() {
 	
 	//////////////////////////////////////////////////
 	///// Default set up
-	if (DEFAULT_MODEL){
+	if (DEFAULT_MODEL){ /// Only runs if the above Custom model loop did not go through fully
 		
 		
 		/// Set up pop1
