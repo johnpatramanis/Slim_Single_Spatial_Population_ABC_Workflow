@@ -7,7 +7,7 @@
     "WIDTH":[100],
     "HEIGHT":[20],
     "RUNTIME":[10000],
-    "REMOVE_BOUNDARIES":[100],
+    "REMOVE_BOUNDARIES":[300],
     "KILL_POP":[3500],
     "SPECIESM":[0.5],
     "MU":[0.0],
@@ -16,8 +16,8 @@
     "OUTDIR":["/projects/archaic_introgression-AUDIT/people/rjt939/Slim_Simulations/One_Stable_Pop_ABC/"],
     "NUMBER_OF_POPS":[2],
     "POP_INFO":[
-			{"1":{"K":1,"WMIN":0.0,"WMAX":10.0,"HMIN":0.0,"HMAX":10.0,"REMVBND":1,"KILL":0}},
-				{"2":{"K":1,"WMIN":20.0,"WMAX":30.0,"HMIN":10.0,"HMAX":20.0,"REMVBND":0,"KILL":1}}
+			{"1":{"K":1.0,"WMIN":0.0,"WMAX":15.0,"HMIN":0.0,"HMAX":10.0,"REMVBND":1,"KILL":0}},
+				{"2":{"K":1,"WMIN":40.0,"WMAX":55.0,"HMIN":10.0,"HMAX":20.0,"REMVBND":0,"KILL":1}}
 				],
     "Genome_Architecture_Path":["../../Human_Genome_Architecture/"]
 }
