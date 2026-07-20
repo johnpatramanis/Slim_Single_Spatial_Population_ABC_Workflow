@@ -1,5 +1,5 @@
 ##### Takes input of "Find_Admixture.py"
-##### Run like this """python Python_Scripts/Plot_Histogram_Matching_Haplotypes_Regions.py ./Simulation_Runs/Simulation_0/Diversity_Metrics ./Simulation_Runs/Simulation_0/Ancestry_Plots """
+##### Run like this """python Python_Scripts/Plot_Heatmap_Disimilarity_Haplotypes_Regions.py ./Simulation_Runs/Simulation_0/Diversity_Metrics ./Simulation_Runs/Simulation_0/Ancestry_Plots """
 
 ### Import Packages
 import sys
@@ -7,7 +7,8 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import itertools
-
+import scipy.cluster.hierarchy as sch
+import scipy.spatial.distance as ssd
 
 
 ########## Load and organise data
@@ -20,7 +21,7 @@ File = open(F"{Folder}/{File}",'r')
 #### Read first line, get info
 Labels = File.readline().strip().split()
 
-Size_of_Box = 5
+Size_of_Box = 10
 
 if len(sys.argv) >= 4:
     Size_of_Box = int(sys.argv[3])
@@ -274,36 +275,8 @@ for Ancestry in sorted(ANCESTRIES.keys()):
             Locations = PAIRED_BOXES_LOCATION[counter]
             ### ax.text(j, i, Locations, ha='center',va='center',color='black',fontsize=0.05,rotation=-45,rotation_mode='anchor')
             counter+=1
-    
-    
-    # plt.xticks([x + 0.5 for x in range(0, Max_Dim)], [x for x in range(Size_of_Box, Size_of_Box * Max_Dim + Size_of_Box, Size_of_Box)], rotation=45)
-    # plt.yticks([x + 0.5 for x in range(0, Max_Dim)], [x for x in range(Size_of_Box, Size_of_Box * Max_Dim + Size_of_Box, Size_of_Box)])
-    
-    ### Ticks to middle of each box
-    tick_positions = np.arange(Max_Dim)
-    # Apply Xaxis ticks and labels
-    ax.set_xticks(tick_positions)
-    ax.set_xticklabels(box_labels, rotation=45, fontsize=8)
-    
-    # Apply Yaxis ticks and labels
-    ax.set_yticks(tick_positions)
-    ax.set_yticklabels(box_labels, fontsize=8)
 
-    
-    plt.xlabel('X, Y position of Box', fontweight ='bold', fontsize = 13)
-    plt.ylabel('X, Y position of Box', fontweight ='bold', fontsize = 13)
-    plt.tight_layout()
-    plt.title(F'Heatmap of similarity of\n Ancestry {Ancestry} segments\n grouped in Boxes of Size {Size_of_Box}', fontsize = 12, pad = 14, fontweight ='bold')
-    plt.imshow(Sim_matrix, cmap = 'hot', interpolation = 'nearest')
-    
-    
-    
-    
-    
-    plt.savefig(F"{Output_Folder}/Ancestry_{Ancestry}_Regional_Similarity_Heatmap_boxsize_{Size_of_Box}.pdf")
-    
-    
-    
+
     ########### Distance Matrix with Dendogram
     fig, ax = plt.subplots()
     
@@ -320,44 +293,77 @@ for Ancestry in sorted(ANCESTRIES.keys()):
     plt.xlabel('X, Y position of Box', fontweight ='bold', fontsize = 13)
     plt.ylabel('X, Y position of Box', fontweight ='bold', fontsize = 13)
     plt.tight_layout()
-    plt.title(F'Heatmap of similarity of\n Ancestry {Ancestry} segments\n grouped in Boxes of Size {Size_of_Box}', fontsize = 12, pad = 14, fontweight ='bold')
+    plt.title(F'Heatmap of dis-similarity of\n Ancestry {Ancestry} segments\n grouped in Boxes of Size {Size_of_Box}', fontsize = 12, pad = 14, fontweight ='bold')
     plt.imshow(Sim_matrix, cmap = 'hot', interpolation = 'nearest')
     
-    
-    
+    ########### Distance Matrix with Combined Single & Centroid Dendrograms
+
     D = 1.0 - Sim_matrix
     np.fill_diagonal(D, 0)
-    condensedD = squareform(D)
     
-    ######  Compute and plot first dendrogram.
-    fig = plt.figure(figsize=(8, 8))
-    ax1 = fig.add_axes([0.09, 0.1, 0.2, 0.6])
-    Y = sch.linkage(condensedD, method='centroid')
-    Z1 = sch.dendrogram(Y, orientation='left')
-    ax1.set_xticks([])
-    ax1.set_yticks([])
+    ########### Enforce perfect symmetry to prevent SciPy squareform errors and Convert to condensed format
+    D = (D + D.T) / 2.0 
+    condensedD = ssd.squareform(D)
     
-    ######  Compute and plot second dendrogram.
-    ax2 = fig.add_axes([0.3, 0.71, 0.6, 0.2])
-    Y = sch.linkage(condensedD, method='single')
-    Z2 = sch.dendrogram(Y)
-    ax2.set_xticks([])
-    ax2.set_yticks([])
+    ########### Compute the two different hierarchical clusterings
+    Y_single = sch.linkage(condensedD, method = 'single')
+    Y_centroid = sch.linkage(condensedD, method = 'centroid')
     
-    ######  Plot distance matrix.
-    axmatrix = fig.add_axes([0.3, 0.1, 0.6, 0.6])
-    idx1 = Z1['leaves']
-    idx2 = Z2['leaves']
-    D = D[idx1,:]
-    D = D[:,idx2]
-    im = axmatrix.matshow(D, aspect='auto', origin='lower', cmap=plt.cm.YlGnBu)
-    axmatrix.set_xticks([])  # remove axis labels
-    axmatrix.set_yticks([])  # remove axis labels
+    ########### Set up the figure layout
+    fig = plt.figure(figsize=(12, 11))
+    ax_left_dendro = fig.add_axes([0.05, 0.1, 0.15, 0.6])   #### Left dendrogram
+    ax_top_dendro = fig.add_axes([0.22, 0.72, 0.6, 0.15])   #### Top dendrogram
+    ax_matrix = fig.add_axes([0.22, 0.1, 0.6, 0.6])         ####  Heatmap
     
-    # Plot colorbar.
-    axcolor = fig.add_axes([0.91, 0.1, 0.02, 0.6])
-    plt.colorbar(im, cax=axcolor)
-    plt.show()
+    ############ Plot the dendrograms
+    #### Left (Single Linkage)
+    Z_left = sch.dendrogram(Y_single, orientation = 'left', ax=ax_left_dendro)
+    ax_left_dendro.axis('off')
+    
+    #### Top (Centroid Linkage)
+    Z_top = sch.dendrogram(Y_centroid, orientation = 'top', ax=ax_top_dendro)
+    ax_top_dendro.axis('off')
+    
+    ##### Reorder the distance matrix and labels based on the two different clusterings
+    idx_rows = Z_left['leaves']
+    idx_cols = Z_top['leaves']
+    
+    ###### Slice the matrix: sort rows by single linkage (left), columns by centroid linkage (top)
+    D_reordered = D[idx_rows, :][:, idx_cols]
+    
+    ###### Create two separate label lists for rows and columns
+    box_labels_rows = [box_labels[i] for i in idx_rows]
+    box_labels_cols = [box_labels[i] for i in idx_cols]
+    
+    ###### Plot the Heatmap
+    im = ax_matrix.imshow(D_reordered, cmap='hot', interpolation='nearest', aspect='auto')
+    
+    ##### Apply Ticks and Labels
+    #### X-axis (Top Dendrogram / Centroid)
+    ax_matrix.set_xticks(np.arange(len(idx_cols)))
+    ax_matrix.set_xticklabels(box_labels_cols, rotation=45, fontsize=8)
+    
+    #### Y-axis (Left Dendrogram / Single)
+    ax_matrix.set_yticks(np.arange(len(idx_rows)))
+    ax_matrix.set_yticklabels(box_labels_rows, fontsize=8)
+    
+    ##### Move Y-axis labels to the right side
+    ax_matrix.yaxis.tick_right()
+    ax_matrix.yaxis.set_label_position("right")
+    
+    ########### Apply axis labels denoting the clustering method used for that axis
+    ax_matrix.set_xlabel('X, Y position of Box\n(Centroid Order)', fontweight='bold', fontsize=13)
+    ax_matrix.set_ylabel('X, Y position of Box\n(Single Order)', fontweight='bold', fontsize=13)
+    
+    ########### 8. Add Titles and Colorbar
+    fig.suptitle(f"Ancestry {Ancestry} segments grouped by similarity in Boxes of Size {Size_of_Box}", fontsize=14, fontweight='bold', y=0.95)
+    
+    ax_left_dendro.set_title("Single Linkage Clustering", rotation=90, va='center', x=-0.1, y=0.5, fontsize=12)
+    ax_top_dendro.set_title("Centroid Linkage Clustering", fontsize=12, pad=10)
     
     
-    plt.savefig(F"{Output_Folder}/Ancestry_{Ancestry}_Regional_Similarity_Heatmap_boxsize_{Size_of_Box}.pdf")
+    ########### Save and clear figure
+    plt.savefig(f"{Output_Folder}/Ancestry_{Ancestry}_Combined_Distance_Heatmap_boxsize_{Size_of_Box}.pdf")
+    plt.close(fig)
+
+    

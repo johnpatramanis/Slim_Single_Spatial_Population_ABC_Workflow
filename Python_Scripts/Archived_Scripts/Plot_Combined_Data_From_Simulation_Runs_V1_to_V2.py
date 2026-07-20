@@ -259,17 +259,13 @@ with open(Parameters_File, "r") as JSON: ### load parameters as json dictionary
 JSON.close() # close file
 
 #### make sure information on population location is available
-if ( 'POP_INFO' in JSON_data.keys() ):
+if ( "POP_1_WIDTH_MIN" in JSON_data.keys() ) and ( "POP_1_HEIGHT_MIN" in JSON_data.keys() ):
     
     print("Creating plot with spatial setup of the populations at first generation")
     
     ## Real Dims of space
     Real_Width = JSON_data["WIDTH"][0]
     Real_Height = JSON_data["HEIGHT"][0]
-    
-    #### Global K from parameter file
-    Global_K = JSON_data['K'][0]
-    
     
     #### Space between box and plot edges
     padding = 1
@@ -296,32 +292,33 @@ if ( 'POP_INFO' in JSON_data.keys() ):
     ax.set_ylim(-padding, Real_Height + padding)
     ax.set_aspect('equal')
     
-
+    
     ####### Cycle through ancestries and plot some individuals if the population location is in the parameters folder
-    for POP in JSON_data['POP_INFO']:
-        for SPAT_ANC,INFO in POP.items(): #### Should be 1 key, with multiple dictionaries as values (INFO)
+    for SPAT_ANC in Total_Ancestries:
         
-            min_width = INFO["WMIN"]
-            max_width = INFO["WMAX"]
-            min_height = INFO["HMIN"]
-            max_height = INFO["HMAX"]
-            ancestry_K = INFO["K"]
+        
+        if F"POP_{SPAT_ANC}_WIDTH_MIN" in JSON_data.keys():
+            
+            min_width = JSON_data[F"POP_{SPAT_ANC}_WIDTH_MIN"][0]
+            max_width = JSON_data[F"POP_{SPAT_ANC}_WIDTH_MAX"][0]
+            min_height = JSON_data[F"POP_{SPAT_ANC}_HEIGHT_MIN"][0]
+            max_height = JSON_data[F"POP_{SPAT_ANC}_HEIGHT_MAX"][0]
                         
             ### Print random individuals within population range
-            N_points = int( Global_K * ancestry_K * (max_height -  min_height) * (max_width - min_width) )
+            N_points = 100
             for i in range(N_points):
-    
+
                 # Random position within limits
                 x = random.uniform(min_width, max_width)
                 y = random.uniform(min_height, max_height)
-    
-    
+
+
                 # Plot point
                 ax.scatter(
                     x,
                     y,
                     color = Colours_to_ancestries[SPAT_ANC],
-                    s = 4   # point size
+                    s = 5   # point size
                 )
     
     
@@ -341,12 +338,12 @@ if ( 'POP_INFO' in JSON_data.keys() ):
     #### New rectangle
     fig, ax = plt.subplots()
     rect = Rectangle(
-        (0, 0),          # Start from bottom-left corner
-        Real_Width,             # Width
-        Real_Height,             # Height
-        linewidth = line_thickness,
-        edgecolor = 'white', 
-        facecolor = 'none'  # No fill
+        (0, 0),          # bottom-left corner
+        Real_Width,             # width
+        Real_Height,             # height
+        linewidth=line_thickness,
+        edgecolor='white',
+        facecolor='none'  # no fill
     )
     
     ax.add_patch(rect)
@@ -356,7 +353,7 @@ if ( 'POP_INFO' in JSON_data.keys() ):
     ax.set_ylim(-padding, Real_Height + padding)
     ax.set_aspect('equal')
     
-    for IND in Individual_Info: #### Go through sampled individuals 
+    for IND in Individual_Info:
         
         LOC = IND[1].split('--')
         LOC = [float(x) for x in LOC]
@@ -368,7 +365,7 @@ if ( 'POP_INFO' in JSON_data.keys() ):
             X_pos,
             Y_pos,
             color = Colours_to_ancestries[POP_ID],
-            s = 4   # point size
+            s = 5   # point size
         )
 
     plt.savefig(F"{Output_Folder}/Population_Spatial_Setup_Last_Gen.pdf", format="pdf")

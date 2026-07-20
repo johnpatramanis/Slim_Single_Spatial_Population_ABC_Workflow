@@ -102,8 +102,11 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
         import demes
         graph = demes.load(F'{Folder}/Demography.yaml')
         Demes_ography = msprime.Demography.from_demes(graph)
-        rts = pyslim.recapitate(ts, demography = Demes_ography, recombination_rate = 1e-8)
         
+        if (Demes_ography.num_populations == ts.num_populations): ### Basic check that provided demography can be joined with Slim demogrphy
+            rts = pyslim.recapitate(ts, demography = Demes_ography, recombination_rate = 1e-8)
+        else: ### If not, use a generic coalescence model for all populations
+            rts = pyslim.recapitate(ts, recombination_rate=1e-8, ancestral_Ne = 10000)   ##### Use custome Recombination map (both for Slim and Tskit), see here https://tskit.dev/pyslim/docs/stable/tutorial.html
     
     
     

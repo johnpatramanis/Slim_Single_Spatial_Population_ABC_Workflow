@@ -198,12 +198,12 @@ def Analyse_Tree_Sequence(index, ts, Last_Gen_SubSample, First_Gen):
 
 
 
-# Assuming Tree_Sequences is your list of loaded objects
-def print_all_metadata_parallel(Tree_Sequences, max_workers=4):
-    # We use ThreadPoolExecutor to avoid duplicating the ts objects in RAM
+##### Assuming Tree_Sequences is your list of loaded objects
+def print_all_metadata_parallel(Tree_Sequences, max_workers = 4):
+    #### We use ThreadPoolExecutor to avoid duplicating the tree-sequence objects in RAM
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-        # Pass the index and the object to the function
-        # Using enumerate to keep track of which TS is which
+        #### Pass the index and the object to the function
+        #### Using enumerate to keep track of which TS is which
         futures = [executor.submit(Analyse_Tree_Sequence, index, ts, Last_Gen_SubSample, First_Gen) 
                    for index, ts in enumerate(Tree_Sequences)]
         
