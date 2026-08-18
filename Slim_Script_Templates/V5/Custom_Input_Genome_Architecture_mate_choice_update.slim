@@ -1,0 +1,670 @@
+////// SKELETON ON "SPACE IS PLACE" - https://github.com/kr-colab/spaceness/blob/master/slim_recipes/flat_map.slim
+////// V2 Updates: Cross-population competition after expansion, 2 biol sexes, Admxiture between 2 populations
+////// V3 Updates: Chromosomal structure, including 3 autosomes, x, Y and mitochondrial
+////// V4 Updates: Population label assignment
+////// V5 Updates: Parameters imported from config file params.json
+
+initialize() { 
+	initializeSLiMModelType("nonWF");  //////// Slim Command to iniitiate NON-WF models
+	initializeSLiMOptions(dimensionality = "xy"); //////// Initiate 2 dimmentional space
+	initializeSex(); ////// Initiate Seperation of Biological Sex
+	
+	// This model uses tree-sequence recording, but it is optional
+	initializeTreeSeq();    //////// Initiate tree-sequence recording
+	
+	defaults = Dictionary(
+		"SEED", getSeed(),
+		"SD", 0.5,         // sigma_D, dispersal distance //// Is only used to move new born individuals in "early" //// higher => increased movement
+		"SX", 0.5,         // sigma_X, interaction distance for measuring local density //// Used to create an interaction, which is then used for reducing fitness based on the proximity of other individuals
+		"SM", 0.5,         // sigma_M, mate choice distance //// Used to create an interaction, which is then used to pick a candidate for mating
+		"K", 5,            // carrying capacity per unit area //// Used to calcualte RHO= FECUN / ((1 + FECUN) * K)) //// Used for initial population number of individuals = K * WIDTH * HEIGHT
+		"LIFETIME", 4,     // average life span ////
+		"WIDTH", 100.0,     // width of the simulated area ////
+		"HEIGHT", 20.0,    // height of the simulated area ////
+		"RUNTIME", 10000,    // total number of ticks to run the simulation for ////
+		"REMOVE_BOUNDARIES", 100, // Timeline of Simulation,
+		"KILL_POP", 1350, // Timeline of Simulation,
+		"MU", 0.00000,            // mutation rate ////
+		"Genome_Architecture_Path", "../../Human_Genome_Architecture/",  // generic path for chromosome files ///
+		"SPECIESISM", 0.5,
+		"LifeTable", c(0.00,0.00,0.00,0.15,0.2,0.3,0.5,0.75,0.85,0.95,1.0),
+		"POP_1_WIDTH_MIN", 0.0,
+		"POP_1_WIDTH_MAX", 15.0,
+		"POP_1_HEIGHT_MIN", 0.0,
+		"POP_1_HEIGHT_MAX", 10.0,
+		"POP_2_WIDTH_MIN", 40.0,
+		"POP_2_WIDTH_MAX", 55.0,
+		"POP_2_HEIGHT_MIN", 10.0,
+		"POP_2_HEIGHT_MAX", 20.0
+		);	
+	
+	// Set up parameters with a user-defined function
+	setupParams(defaults);
+	
+	// Set up constants that depend on externally defined parameters
+	defineConstant("FECUN", 1 / LIFETIME);
+	defineConstant("RHO", FECUN / ((1 + FECUN) * K));
+	defineConstant("PARAMS", defaults);
+	
+	
+	/// 
+	setSeed(SEED);
+
+	//////// basic neutral genetics
+	//// Initialize Possible Mutations
+	initializeMutationType("m1", 0.5, "f", 0.0); ///standard neutral mutation
+	
+	//// Initialize Possible Genomic Elements
+	initializeGenomicElementType("g1", m1, 1.0); /// Non coding region, only neutral mutations
+	
+	
+	
+	
+	
+	
+	//////////////// If user has provided a valid Genome Architecture and Chromosomes
+	if (exists("Genome_Architecture_and_Chromosomes")){
+		
+		
+		
+		//// Empty lists to be filled wiht Chromosome characteristics
+		ids = c();
+		symbols = c();
+		types = c();
+		lengths = c();
+		recombinations = c();
+		
+		COUNTER = 1;
+		
+		for (KEY in Genome_Architecture_and_Chromosomes.allKeys){
+			
+			///// loop and add to lists
+			ids = c(ids, COUNTER);
+			symbols = c(symbols, Genome_Architecture_and_Chromosomes.getValue(KEY).getValue("SYMBOL"));
+			types = c(types, Genome_Architecture_and_Chromosomes.getValue(KEY).getValue("TYPE"));
+			lengths = c(lengths, asInteger(Genome_Architecture_and_Chromosomes.getValue(KEY).getValue("LENGTH")));
+			
+			recombinations = c(recombinations, Genome_Architecture_and_Chromosomes.getValue(KEY).getValue("RECOMB_FOLDER"));
+			
+			/// Increase for ID
+			COUNTER = COUNTER + 1;
+		}
+		
+		
+		
+		
+		
+		//////// Manifest Chromosomes
+		COUNTER = 0; /// reset counter
+		for (id in ids, symbol in symbols, type in types, length in lengths){
+			
+			/// Basic Characteristics of Chromosome
+			initializeChromosome(id, length, type, symbol);
+			
+			//// if mutation Rate is needed
+			initializeMutationRate(0);
+			
+			/// Recombination Rate
+			/// If user provided recombination folders
+			if (isNULL(recombinations)==F){
+
+				Recombination_File = recombinations[COUNTER];
+				
+				if (fileExists(Recombination_File)) {
+                	
+                	initializeRecombinationRateFromFile(Recombination_File, length-1, scale = 1.0, sep = ",");	
+                }
+                else{
+                	initializeRecombinationRate(1e-8);
+                }
+
+
+				}
+			/// Else flat recombination
+			if (isNULL(recombinations)==T){
+				/// Preset Flat Recomb rate
+				initializeRecombinationRate(1e-8);
+				}
+			
+			//// Genomic Elements
+			initializeGenomicElement(g1, 0, length-1);
+			
+			COUNTER = COUNTER + 1;
+		}
+
+
+
+	} //// If Genome architecture exists
+	
+	
+	
+	
+	
+	///////// Back Up if User has not provided Genome_Architecture
+	/// Initialize Individual Chromosomes (Haplosomes)
+	/// Human chromosome sizes from https://github.com/bhaller/SimHumanity 
+	/// Define the ids, symbols, types, and lengths of all nuclear chromosomes
+	
+	if (exists("Genome_Architecture_and_Chromosomes") == F){
+		
+		///// Create Lists for Chromosomes
+		ids = 1:25;
+		symbols = c(1:22, "X", "Y","MT");
+		types = c(rep("A", 22), "X", "Y","HF");
+		lengths = c(248956422, 242193529, 198295559, 190214555, 181538259,
+			170805979, 159345973, 145138636, 138394717, 133797422, 135086622,
+			133275309, 114364328, 107043718, 101991189, 90338345, 83257441,
+			80373285, 58617616, 64444167, 46709983, 50818468, 156040895,
+			57227415,16560);
+		
+	
+	
+		////// Manifest Chromosomes!
+		for (id in ids, symbol in symbols, type in types, length in lengths)
+		{
+			///// Length
+			initializeChromosome(id, length, type, symbol);
+			
+			//// Mutation Rate
+			initializeMutationRate(0);
+			
+			
+			// Recombination Rate
+			
+			//// Should you want to use generic, flat recombination rate
+			// initializeRecombinationRate(1e-8);
+			//// Should you want to use imorted genomic elements
+			// Read the recombination rate map from a file
+			Recombination_File = Genome_Architecture_Path + "chr" + symbol + "_recombination.txt";
+			
+			if (fileExists(Recombination_File)) {
+				
+				initializeRecombinationRateFromFile(Recombination_File, length-1, scale=1.0, sep=",");	
+			}
+			else{
+				
+				initializeRecombinationRate(1e-8);
+			}
+			
+			
+			
+			
+			
+			
+			// Genomic elements
+			
+			//// Should you want to use flat genomic elements
+			initializeGenomicElement(g1, 0, length-1);
+			
+			//// Should you want to use imorted genomic elements
+			/// Read the genomic element structure of coding vs. non-coding regions
+			/// from another file, which gives genomic element types and positions
+			///Genomic_Elements_Path = CHR_PATH + "chr" + symbol + "_genomic_elements.txt";
+			/// initializeGenomicElementsFromFile(gpath);
+			
+			
+			
+		}
+	
+	}///// Standard Human Architecture, if not provided by user
+	
+	
+	
+	
+	// spatial interaction for local density measurement
+	initializeInteractionType(1, "xy", reciprocal = T, maxDistance = (3*SX) ); //// Initiate a local interaction using the 3*SX as maximum distance
+	i1.setInteractionFunction("n", 1.0/(2*PI*SX^2), SX);                      //// and make it a normal distribution with a mean of 1.0/(2*PI*SX^2)
+	
+	// spatial interaction for mate choice
+	initializeInteractionType(20, "xy", reciprocal = T, maxDistance = (3*SM) ); //// Initiate a local interaction using the 3*SM as maximum distance
+	i20.setInteractionFunction("n", 1.0/(2*PI*SM^2), SM);                      //// and make it a normal distribution with a mean of 1.0/(2*PI*SM^2)
+	
+	i20.setConstraints("receiver", sex="F", minAge = 1, maxAge = (LIFETIME*3) );   //// Females 'receive' signal from males to make their choice
+	i20.setConstraints("exerter", sex="M", minAge = 1, maxAge = (LIFETIME*3) );   ////  Males exert signal. Both sexes can only participate in mating until they are 3*LIFETIME old
+	
+
+
+
+
+}
+
+
+
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
+////////// Initial Generation Set Up
+
+
+1 first() {
+		
+
+	
+	/// Default model activator
+	DEFAULT_MODEL = 1;
+	
+	
+	
+	
+	
+	////////////////////////////////////////////////////////////////////////////////
+	//// Custom set up, will dieactivate default model if everything checks out
+	
+	if ( (exists("POP_INFO")) & (exists("NUMBER_OF_POPS")) ){
+	
+		if( asInteger(NUMBER_OF_POPS) == size(POP_INFO.allKeys) ){ /// If user has provided the correct number of populations & population info combination (every population needs to have info for it)
+			
+		
+			//// Lists to append to 
+			Denisty_list = c();
+		    Release_list = c();
+		    Kill_List = c();
+		
+		
+			
+			//// Loop to go through every population 
+			for (X in 1:asInteger(NUMBER_OF_POPS), KEY in POP_INFO.allKeys){
+				
+				//// X = Pop ID, POP_INFO.getValue(KEY) = Paramters of population
+				/// Get parameters for this pop
+				POP_K = POP_INFO.getValue(KEY).getValue("K");
+				POP_WMIN = POP_INFO.getValue(KEY).getValue("WMIN");
+				POP_WMAX = POP_INFO.getValue(KEY).getValue("WMAX");
+				POP_HMIN = POP_INFO.getValue(KEY).getValue("HMIN");
+				POP_HMAX = POP_INFO.getValue(KEY).getValue("HMAX");
+				POP_REMVBND = POP_INFO.getValue(KEY).getValue("REMVBND");
+				POP_KILL = POP_INFO.getValue(KEY).getValue("KILL");
+				
+				
+				//// Set Up Population
+				
+				sim.addSubpop("p" + X, asInteger( POP_K * K * (POP_WMAX - POP_WMIN) * (POP_HMAX - POP_HMIN) )); //// Create population with a population seeded with a roughg number of individuals relative to the space they occupy
+				POP_ID = sim.subpopulations[X-1];  /// select current population
+				POP_ID.setSpatialBounds(c(POP_WMIN, POP_HMIN, POP_WMAX, POP_HMAX));  ////  Add spatial bounds for this population
+				POP_ID.individuals.setSpatialPosition(POP_ID.pointUniform(POP_ID.individualCount));
+				POP_ID.setSpatialBounds(c(0, 0, WIDTH, HEIGHT));
+				
+				
+				//// Add the K multiplier, Whether or not it is 'released' and whether or not it is 'Killed' to the lists
+				
+				Denisty_list = c(Denisty_list, POP_K);
+				Release_list = c(Release_list, POP_REMVBND);
+				Kill_List = c(Kill_List, POP_KILL);
+				
+				
+				
+				
+			}
+			
+			
+			////// Set to False, so the Default loop does not kick in and the custom model runs
+			print("Custom Population Model");
+			DEFAULT_MODEL = 0;
+			
+		}
+	
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	//////////////////////////////////////////////////
+	///// Default set up
+	if (DEFAULT_MODEL){ /// Only runs if the above Custom model loop did not go through fully
+		
+		
+		/// Set up pop1
+		sim.addSubpop("p1", asInteger(500));  ////// add Initial population 
+		p1.setSpatialBounds(c(POP_1_WIDTH_MIN, POP_1_HEIGHT_MIN, POP_1_WIDTH_MAX, POP_1_HEIGHT_MAX));   /////// Add spatial bounds for population 1
+		p1.individuals.setSpatialPosition(p1.pointUniform(p1.individualCount));  ///// Place Individuals from pop1 into spatial boundaries of population 1
+		
+		
+		
+		/// Set up pop2
+		sim.addSubpop("p2", asInteger(500));  ////// add Initial population 
+		p2.setSpatialBounds(c( POP_2_WIDTH_MIN, POP_2_HEIGHT_MIN, POP_2_WIDTH_MAX, POP_2_HEIGHT_MAX));   /////// Add spatial bounds for population 1
+		p2.individuals.setSpatialPosition(p2.pointUniform(p2.individualCount));  ///// Place Individuals from pop1 
+
+		
+		Denisty_list = c(1.0,1.0);
+		Release_list = c(1,0);
+		Kill_List = c(0,1);
+	
+	
+	}
+
+
+
+
+
+	////////////////////////////////////////////////////////////
+
+	//// Lists to be used to control each population's fate, need to be defined as globals
+	
+	defineConstant("DENSITY_MULT_LIST", Denisty_list);
+	defineConstant("RELEASE_LIST", Release_list);
+	defineConstant("KILL_LIST", Kill_List);
+	
+	////// Record
+	//////
+	log = community.createLogFile(OUTDIR + "sim_log.txt", logInterval = 1000);
+	log.addCycle();
+	
+
+	
+	/////
+	// Get number of populations
+	defineConstant("Npop", length(sim.subpopulations));
+	sim.subpopulations.individuals.tag = 0; //// can be used to assign a population to a hybrid of two pops, default is 0, not a hybrid
+}
+
+
+
+
+
+
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////// Checkpoints - Events
+
+
+///// Check which Populations have their boundaries removed
+
+REMOVE_BOUNDARIES first() {
+	
+	print("Boundaries Removed");
+	for (RLS in RELEASE_LIST, POP in sim.subpopulations, POP_ID in 1:asInteger(NUMBER_OF_POPS) ){	/// Cycle through populations and list of popualtion to have their boundaries removed
+		
+		if (RLS){ /// If true for this population, permamently set boundaries to be equal to all space
+			
+			POP_INFO.getValue(asString(POP_ID)).setValue("WMIN", 0.0);
+			POP_INFO.getValue(asString(POP_ID)).setValue("WMAX", WIDTH);
+			POP_INFO.getValue(asString(POP_ID)).setValue("HMIN", 0.0);
+			POP_INFO.getValue(asString(POP_ID)).setValue("HMAX", HEIGHT);
+			
+			
+		}
+	}
+}
+
+
+
+
+
+///// Check which Populations need to be... terminated
+
+KILL_POP first(){
+	
+for (X in KILL_LIST, POP in sim.subpopulations){ /// Cycle through populations and list of popualtion to be terminated
+
+	if (X){ /// If true for this population
+		
+		sim.killIndividuals(POP.individuals);
+		
+		}
+	}
+
+}
+
+
+
+
+
+
+///// Calcualte Mating interactions
+first() {
+	
+	/// preparation for the reproduction() callback
+	for (POP in sim.subpopulations){
+		i20.evaluate(POP);
+	}
+
+}
+
+
+
+
+
+
+/////////////////////////////////////////////
+//////////// MATING AND REPRODUCTION ////////
+
+reproduction() { ///// Works for both populations
+	
+	mate = c();
+	mate_choice = c();
+	
+	for (POP in sim.subpopulations){
+		
+		///// Search 100 times and pick only unique individuals from that pop
+		mates_around = unique(i20.drawByStrength(individual, 100, POP));
+		mate_choice_around = i20.strength(individual, mates_around);
+		
+		///// Add speciecism to strength value (multiply it)
+		if(individual.subpopulation == POP){
+		mate_choice_around = mate_choice_around * SPECIESISM;
+			}
+		if(individual.subpopulation != POP){
+		mate_choice_around = mate_choice_around * (1 - SPECIESISM);
+			}
+			
+		//// Add them to list of options
+		mate = c(mate,mates_around);
+		mate_choice =c(mate_choice, mate_choice_around);
+		
+	}
+
+	
+	/////// Final choice
+	if (mate.size()>1){
+		mate = sample(mate, 1, weights = mate_choice);
+		}
+	/////// if succesful candidate
+	if (mate.size()){ //// If list not empty, mate with chosen individual
+		///print(c(individual.subpopulation,mate.subpopulation));
+		subpop.addCrossed(individual, mate, count=rpois(1, 3*FECUN));	
+		}
+
+}
+
+
+
+
+
+////////// 1st Gen Hybrids
+//// Assigning label to child, fate of child
+
+modifyChild() {
+
+child.tag = 0;
+//// if child is offspring of parents from different populations
+if(parent1.subpopulation != parent2.subpopulation){
+
+	//// randomly assign the child a population tag
+	pool_of_options = c(parent1.subpopulation,parent2.subpopulation);
+	random_assignment = sample(pool_of_options, 1);
+	child.tag = random_assignment.id;
+	}
+return T;
+}
+
+
+
+/////////////////////////////////////////////
+//////////// DISPERSAL AND SURVIVAL ////////
+
+early() {
+	///////////////////////
+	/// For each population move individuals out of bounds, towards their center
+	
+	
+	
+	
+	
+	/// For each population Calculate competition and sruvival
+	for (POP in sim.subpopulations, Density_Multiplier in DENSITY_MULT_LIST){
+	
+		
+		
+		/// Evaluate pressure from other individuals
+		// Measure local density and use it for density regulation
+		/// Calculate competition as sum of pressure from all populations multiplied by the age mortality of each individual
+		competition = 0;
+		inds = POP.individuals;
+		ages = inds.age;
+		mortality = LifeTable[ages];
+		survival = 1 - mortality;		
+		
+		//// Cycle through competition interactions (but not last one, which is mating interaction)
+		for (INTERACTION in community.allInteractionTypes[0:(length(community.allInteractionTypes)-2)] ){
+			
+			INTERACTION.evaluate(POP);
+			competition_inter = INTERACTION.localPopulationDensity(inds); /// competition from a specific interaction (population)
+			competition = competition + competition_inter;  /// add to total competition 
+		
+		}
+		
+		//// print(c(length(competition),length(inds)));  /// these two should be identical
+		inds.fitnessScaling = pmin(0.95,( survival  / (1 + RHO * (1/Density_Multiplier) * competition)));
+		
+	}
+
+	GEN = sim.cycle;
+
+}
+
+
+
+
+
+//////////////////////////////
+//////////// END OF SIMULATION
+late() {
+	
+	//// Hybrid population assignment
+	for (POP in sim.subpopulations, POP_ID in 1:asInteger(NUMBER_OF_POPS) ){ /// for each pop
+		
+	//// Check for hybrid individuals and change their population assignment
+	offspring = POP.subsetIndividuals(maxAge=0);
+	
+	for (X in seq(1,Npop), NEWPOP in sim.subpopulations){ ///for
+	
+		hybrids = POP.subsetIndividuals(tag = X, maxAge = 0);
+		if (hybrids.size()){
+			NEWPOP.takeMigrants(hybrids);
+		}
+    }
+	
+	
+	/// Disperse offspring
+	offspring = POP.subsetIndividuals(maxAge=0);
+	
+	POP_WMIN = POP_INFO.getValue(asString(POP_ID)).getValue("WMIN");
+	POP_WMAX = POP_INFO.getValue(asString(POP_ID)).getValue("WMAX");
+	POP_HMIN = POP_INFO.getValue(asString(POP_ID)).getValue("HMIN");
+	POP_HMAX = POP_INFO.getValue(asString(POP_ID)).getValue("HMAX");
+	
+	POP.setSpatialBounds(c(POP_WMIN, POP_HMIN, POP_WMAX, POP_HMAX));
+	POP.deviatePositions(offspring, "stopping", 1, "n", SD);
+	POP.setSpatialBounds(c(0, 0, WIDTH, HEIGHT));
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	}
+	
+	
+	
+	if (p1.individualCount == 0) {
+		
+		catn("Population went extinct! Ending the simulation.");
+		GEN=sim.cycle;
+		writeFile(OUTDIR + "Slim_Simulation_Failed_To_Finish", asString(GEN) );
+		sim.treeSeqOutput(OUTDIR + "Spatial_Simulations_SLim.trees",overwriteDirectory = T);
+		sim.outputFull(OUTDIR + "Spatial_Simulations_SLim.output_full");
+		sim.simulationFinished();
+		
+	}
+	
+	sim.subpopulations.individuals.tag = 0;  //// Reset hybrid label
+}
+
+
+
+RUNTIME late() {
+
+	catn("End of simulation (run time reached)");
+	sim.treeSeqOutput(OUTDIR + "Spatial_Simulations_SLim.trees",overwriteDirectory = T); //// Output Tree Sequences into predefined output file
+	sim.outputFull(OUTDIR + "Spatial_Simulations_SLim.output_full"); //// Output Full information on the simulation
+	sim.simulationFinished();
+
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////// CUSTOM FUNCTIONS
+
+/////////////////////////
+//////////// Mobility Functions
+
+//// To check out of bounds individuals
+function (object)GetIndividualsOutOfBounds(o<Subpopulation> SUBPOP, numeric WMIN, numeric WMAX, numeric HMIN, numeric HMAX)
+{
+	
+	INDS = SUBPOP.individuals;
+	OUTLIERS = INDS[INDS.x < WMIN | INDS.x > WMAX | INDS.y < HMIN | INDS.y > HMAX ];
+	
+	return OUTLIERS;
+	
+}
+
+/////////// To move individuals towards center of their populatio
+
+
+/////////////////////////
+//////////// Input - Output Functions
+
+function (void)setupParams(object<Dictionary>$ defaults)
+{
+	if (!exists("PARAMFILE")) defineConstant("PARAMFILE", "./params.json");
+	
+	if (fileExists(PARAMFILE)) {
+		defaults.addKeysAndValuesFrom(Dictionary(readFile(PARAMFILE)));
+		defaults.setValue("READ_FROM_PARAMFILE", PARAMFILE);
+	}
+
+
+	for (k in defaults.allKeys) {
+		if (!exists(k))
+			defineConstant(k, defaults.getValue(k));
+		else
+			defaults.setValue(k, executeLambda(k + ";"));
+	}
+	
+	// print out default values
+	catn("===========================");
+	catn("Model constants: " + defaults.serialize("pretty"));
+	catn("===========================");
+}
+

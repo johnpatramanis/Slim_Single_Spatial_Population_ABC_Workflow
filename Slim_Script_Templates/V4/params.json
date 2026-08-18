@@ -1,0 +1,23 @@
+{
+	"SD":[0.5],
+	"SX":[0.5],
+	"SM":[0.5],
+    "K":[5],
+    "LIFETIME":[4],
+    "WIDTH":[100],
+    "HEIGHT":[20],
+    "RUNTIME":[10000],
+    "REMOVE_BOUNDARIES":[1000],
+    "KILL_POP":[3500],
+    "SPECIESM":[0.5],
+    "MU":[0.0],
+    "LifeTable":[0.00,0.00,0.00,0.15,0.2,0.3,0.5,0.75,0.85,0.95,1.0],
+    "NUMBER_OF_SAMPLES":[100],
+    "OUTDIR":["/projects/archaic_introgression-AUDIT/people/rjt939/Slim_Simulations/One_Stable_Pop_ABC/"],
+    "NUMBER_OF_POPS":[2],
+    "POP_INFO":[
+			{"1":{"K":1,"WMIN":0.0,"WMAX":10.0,"HMIN":0.0,"HMAX":10.0,"REMVBND":1,"KILL":0}},
+				{"2":{"K":1,"WMIN":45.0,"WMAX":55.0,"HMIN":10.0,"HMAX":20.0,"REMVBND":0,"KILL":1}}
+				],
+    "Genome_Architecture_Path":["../../Human_Genome_Architecture/"]
+}
