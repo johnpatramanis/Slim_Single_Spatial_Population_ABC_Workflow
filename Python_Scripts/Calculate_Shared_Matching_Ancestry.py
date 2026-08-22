@@ -1,6 +1,7 @@
-########### python Python_Scripts/Calculate_Shared_Matching_Ancestry.py ./Simulation_Runs/Simulation_0/Composite_Individuals/Box_Size_10 ./Simulation_Runs/Simulation_0/Composite_Individuals/Diversity_Metrics
+########### python Python_Scripts/Calculate_Shared_Matching_Ancestry.py ./Simulation_Runs/Simulation_0/Ancestries ./Simulation_Runs/Simulation_0/
 import sys
 import os
+import numpy as np
 from itertools import combinations
 
 
@@ -13,6 +14,8 @@ def Return_Matching_Trees(Candidate_1 ,Candidate_2 ,Tree_Lengths ,ancestry):
     
     Matching_Trees = []
     Missmatching_Trees = []
+    Candidate_1_Trees = []
+    Candidate_2_Trees = []
     
     #### Calcualte how many trees of this ancestry are matching
     for Tree in range(0,len(Tree_Lengths)):
@@ -25,13 +28,54 @@ def Return_Matching_Trees(Candidate_1 ,Candidate_2 ,Tree_Lengths ,ancestry):
             if (Ancestry_1 == Ancestry_2):
                 
                 Matching_Trees.append(Tree_Lengths[Tree])
+                Candidate_1_Trees.append(Tree_Lengths[Tree])
+                Candidate_2_Trees.append(Tree_Lengths[Tree])
+
+
+
 
             if (Ancestry_1 != Ancestry_2):
                 
                 Missmatching_Trees.append(Tree_Lengths[Tree])
+                
+                if (Ancestry_1 == ancestry):
+                    Candidate_1_Trees.append(Tree_Lengths[Tree])
+                
+                if (Ancestry_2 == ancestry):
+                    Candidate_2_Trees.append(Tree_Lengths[Tree])
 
 
-    return Matching_Trees,Missmatching_Trees
+    return Matching_Trees, Missmatching_Trees, Candidate_1_Trees, Candidate_2_Trees
+  
+ 
+ 
+ 
+
+  
+def Return_Metric_For_Pair(Candidate_1_Trees ,Candidate_2_Trees , Matching_Trees , Missmatching_Trees, ancestry, Tree_Lengths):
+    Metric = 0
+    
+    Observed_Matching = sum(Matching_Trees) / sum(Tree_Lengths)
+    
+    Cand_1_Matching = sum(Candidate_1_Trees) / sum(Tree_Lengths)
+    Cand_2_Matching = sum(Candidate_2_Trees) / sum(Tree_Lengths)
+    
+    Expected_Matching = Cand_1_Matching * Cand_2_Matching 
+    
+    Normalized = np.sqrt( Cand_1_Matching - Cand_1_Matching**2) * np.sqrt( Cand_2_Matching - Cand_2_Matching**2)
+    
+    
+    if Normalized == 0:
+        Normalized = 0.001
+    
+    Metric = (Observed_Matching - Expected_Matching) / Normalized
+
+    print(F"Ancestry: {ancestry}, Coverage Ind 1:{Cand_1_Matching}, coverage Ind 2:{Cand_2_Matching}, Observed_Matching: {Observed_Matching}, Metric: {Metric}")
+    return Metric
+  
+  
+  
+  
   
   
 ################################################################################################################
@@ -117,7 +161,9 @@ for File in os.listdir(F"{Folder}"):
             
             
             #### Returns two lists of tree lengths
-            Matching_Trees, Missmatching_Trees = Return_Matching_Trees(Candidate_1 ,Candidate_2 ,Tree_Lengths ,ancestry)
+            ### Matching Tree = List of Lengths (bp)
+            ### Missmatching_Trees = List of Lengths (bp)
+            Matching_Trees, Missmatching_Trees, Candidate_1_Trees, Candidate_2_Trees = Return_Matching_Trees(Candidate_1 ,Candidate_2 ,Tree_Lengths ,ancestry)
             
             ### Both share ancestry under question for this length
             Total_Matching = sum(Matching_Trees)
@@ -136,9 +182,14 @@ for File in os.listdir(F"{Folder}"):
             ### In case no ancestry
             if Total_Covering != 0:
             ### One metric to sum this up
-                Metric = Total_Matching / Total_Covering
+                
+                #### New metric, taking into account higher percentage of ancestry
+                Metric = Return_Metric_For_Pair(Candidate_1_Trees, Candidate_2_Trees, Matching_Trees, Missmatching_Trees, ancestry, Tree_Lengths)
+                    
+                ###### Metric = Total_Matching / Total_Covering ####### Old metric, simple matching vs coverage
+                
             else:
-                'No_ancestry'
+                Metric = 0
             
             
             To_Print = F"{Chromosome}\t{ancestry}\t{ID_1}\t{ID_2}\t{Total_Matching}\t{Total_MissMatching}\t{Total_Covering}\t{Total_NoAncestry}\t{Metric}\n"

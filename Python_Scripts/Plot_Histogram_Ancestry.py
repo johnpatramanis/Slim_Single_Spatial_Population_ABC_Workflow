@@ -106,6 +106,8 @@ for x in Individual_Location_Y_sorted:
 
 
 
+
+
 ################################### Plotting
 #### Barplot
 
@@ -116,6 +118,9 @@ barWidth_Add = 0
 edge_linewidth = max(0.1, barWidth * 0.55)
 
 
+###### zeroes mathcing length of individuals
+bottom_x = np.zeros(len(Sorted_IDs))
+
 
 fig, ax = plt.subplots()
 
@@ -123,8 +128,10 @@ for ancestry in range(0,len(Genomewide_Ancestries)):
     BAR = [ Individuals_to_Ancestries[x][ancestry] for x in Sorted_IDs]
     BAR_ID = [x for x in range(0,len(Sorted_IDs))]
     
-    plt.bar(BAR_ID, BAR, color = Colours_to_ancestries[Genomewide_Ancestries[ancestry]], width = barWidth, linewidth = edge_linewidth, edgecolor ='black', label = F'Ancestry_{ancestry}')
-
+    plt.bar(BAR_ID, BAR, bottom = bottom_x, color = Colours_to_ancestries[Genomewide_Ancestries[ancestry]], width = barWidth, linewidth = edge_linewidth, edgecolor ='black', label = F'Ancestry_{ancestry}')
+    bottom_x = np.add(bottom_x, BAR)
+    
+    
 plt.xlabel('Sampled Genomes Sorted by Position on X-axis', fontweight ='bold', fontsize = 13) 
 plt.ylabel('Ancestry Percentage', fontweight ='bold', fontsize = 13)
 plt.legend()
@@ -134,6 +141,11 @@ plt.savefig(F"{Output_Folder}/Ancestry_Barplot.pdf", bbox_inches = 'tight')
 
 
 
+
+
+
+###### zeroes mathcing length of individuals
+bottom_y = np.zeros(len(Sorted_IDs_Y))
 
 ############### Same but sorted on the Y axis location
 
@@ -149,7 +161,9 @@ for ancestry in range(0,len(Genomewide_Ancestries)):
     BAR_ID = [x + barWidth_Add for x in range(0,len(Sorted_IDs_Y))]
     
     
-    plt.bar(BAR_ID, BAR, color = Colours_to_ancestries[Genomewide_Ancestries[ancestry]], width = barWidth, linewidth = edge_linewidth, edgecolor ='black', label = F'Ancestry_{ancestry}', transform= rot + base)
+    plt.bar(BAR_ID, BAR, bottom = bottom_y,  color = Colours_to_ancestries[Genomewide_Ancestries[ancestry]], width = barWidth, linewidth = edge_linewidth, edgecolor ='black', label = F'Ancestry_{ancestry}', transform= rot + base)
+    bottom_y = np.add(bottom_y, BAR)
+    
     #barWidth_Add += barWidth
     
 plt.title(F'Percentage of Ancestry per Individual\nSorted by position on the Y axis',fontweight ='bold', fontsize = 12, pad = 14)

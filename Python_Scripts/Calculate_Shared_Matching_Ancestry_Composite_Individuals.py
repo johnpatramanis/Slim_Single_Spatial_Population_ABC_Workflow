@@ -13,6 +13,8 @@ def Return_Matching_Trees(Candidate_1 ,Candidate_2 ,Tree_Lengths ,ancestry):
     
     Matching_Trees = []
     Missmatching_Trees = []
+    Candidate_1_Trees = []
+    Candidate_2_Trees = []
     
     #### Calcualte how many trees of this ancestry are matching
     for Tree in range(0,len(Tree_Lengths)):
@@ -25,13 +27,51 @@ def Return_Matching_Trees(Candidate_1 ,Candidate_2 ,Tree_Lengths ,ancestry):
             if (Ancestry_1 == Ancestry_2):
                 
                 Matching_Trees.append(Tree_Lengths[Tree])
+                Candidate_1_Trees.append(Tree_Lengths[Tree])
+                Candidate_2_Trees.append(Tree_Lengths[Tree])
+
+
+
 
             if (Ancestry_1 != Ancestry_2):
                 
                 Missmatching_Trees.append(Tree_Lengths[Tree])
+                
+                if (Ancestry_1 == ancestry):
+                    Candidate_1_Trees.append(Tree_Lengths[Tree])
+                
+                if (Ancestry_2 == ancestry):
+                    Candidate_2_Trees.append(Tree_Lengths[Tree])
 
 
-    return Matching_Trees,Missmatching_Trees
+    return Matching_Trees, Missmatching_Trees, Candidate_1_Trees, Candidate_2_Trees
+  
+ 
+ 
+ 
+
+  
+def Return_Metric_For_Pair(Candidate_1_Trees ,Candidate_2_Trees , Matching_Trees , Missmatching_Trees, ancestry, Tree_Lengths):
+    Metric = 0
+    
+    Observed_Matching = sum(Matching_Trees) / sum(Tree_Lengths)
+    
+    Cand_1_Matching = sum(Candidate_1_Trees) / sum(Tree_Lengths)
+    Cand_2_Matching = sum(Candidate_2_Trees) / sum(Tree_Lengths)
+    
+    Expected_Matching = Cand_1_Matching * Cand_2_Matching 
+    
+    Normalized = np.sqrt( Cand_1_Matching - Cand_1_Matching**2) * np.sqrt( Cand_2_Matching - Cand_2_Matching**2)
+    
+    
+    if Normalized == 0:
+        Normalized = 0.001
+    
+    Metric = (Observed_Matching - Expected_Matching) / Normalized
+
+    print(F"Ancestry: {ancestry}, Coverage Ind 1:{Cand_1_Matching}, coverage Ind 2:{Cand_2_Matching}, Observed_Matching: {Observed_Matching}, Metric: {Metric}")
+    return Metric
+  
   
   
 ################################################################################################################
@@ -118,8 +158,8 @@ for Ancestry_Folder in os.listdir(F"{Folder}"):
             #### Coverage of ancestry = 1, not coverage = 0
             ancestry = '1'
             
-            #### Returns two lists of tree lengths
-            Matching_Trees, Missmatching_Trees = Return_Matching_Trees(Candidate_1 ,Candidate_2 ,Tree_Lengths ,ancestry)
+            #### Returns four lists of tree lengths
+            Matching_Trees, Missmatching_Trees, Candidate_1_Trees, Candidate_2_Trees = Return_Matching_Trees(Candidate_1 ,Candidate_2 ,Tree_Lengths ,ancestry)
             
             ### Both share ancestry under question for this length
             Total_Matching = sum(Matching_Trees)
@@ -138,7 +178,7 @@ for Ancestry_Folder in os.listdir(F"{Folder}"):
             ### In case no ancestry
             if Total_Covering != 0:
             ### One metric to sum this up
-                Metric = Total_Matching / Total_Covering
+                Metric = Return_Metric_For_Pair(Candidate_1_Trees, Candidate_2_Trees, Matching_Trees, Missmatching_Trees, ancestry, Tree_Lengths)
             else:
                 Metric = 0
             
