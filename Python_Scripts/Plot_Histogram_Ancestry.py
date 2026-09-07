@@ -58,8 +58,13 @@ for LINE in Individuals_File:
     Individual_Location.append( [LINE[0]] + Location )
 
 
+
     
-Individual_Location = sorted(Individual_Location, key = lambda x: x[1])
+Individual_Location = sorted(Individual_Location, key = lambda x: x[1]) ### Until here okay
+
+
+
+
 Individual_Location_Y_sorted = sorted(Individual_Location, key = lambda x: x[2])
 
 
@@ -89,9 +94,11 @@ for line in File:
 ### Sort Haplotypes of this chromosome based on the location of the individual carying them
 Sorted_IDs = []
 
-for x in Individual_Location:
+for x in Individual_Location: ## cycle through sorted ID + Location list
+
     for y in Individuals_to_Ancestries.keys():
-        if x[0] in y:
+        ID = y.split("_")[1]
+        if x[0] == ID:
             Sorted_IDs.append(y)
 
 
@@ -100,7 +107,8 @@ Sorted_IDs_Y = []
 
 for x in Individual_Location_Y_sorted:
     for y in Individuals_to_Ancestries.keys():
-        if x[0] in y:
+        ID = y.split("_")[1]
+        if x[0] == ID:
             Sorted_IDs_Y.append(y)
 
 
@@ -109,7 +117,7 @@ for x in Individual_Location_Y_sorted:
 
 
 ################################### Plotting
-#### Barplot
+#### Stacked Barplot
 
 
 num_samples = len(Sorted_IDs)
@@ -130,9 +138,24 @@ for ancestry in range(0,len(Genomewide_Ancestries)):
     
     plt.bar(BAR_ID, BAR, bottom = bottom_x, color = Colours_to_ancestries[Genomewide_Ancestries[ancestry]], width = barWidth, linewidth = edge_linewidth, edgecolor ='black', label = F'Ancestry_{ancestry}')
     bottom_x = np.add(bottom_x, BAR)
+
+
+#### Generate (X,Y) labels for the ticks
+x_tick_labels = []
+for hap_id in Sorted_IDs:
+    ID = hap_id.split("_")[1]
+    for loc in Individual_Location:
+        if loc[0] == ID:
+            # Format coordinates to 1 decimal place to save space
+            x_tick_labels.append(f"({loc[1]:.1f},{loc[2]:.1f})--{loc[0]}")
+            break
+
+#### Apply small, diagonal ticks
+ax.set_xticks(range(len(Sorted_IDs)))
+ax.set_xticklabels(x_tick_labels, rotation = 60, ha = 'right', fontsize = 1.5)
+   
     
-    
-plt.xlabel('Sampled Genomes Sorted by Position on X-axis', fontweight ='bold', fontsize = 13) 
+plt.xlabel('Sampled Genomes Sorted by Position on X-axis\nCoordinates (X, Y)', fontweight ='bold', fontsize = 13)
 plt.ylabel('Ancestry Percentage', fontweight ='bold', fontsize = 13)
 plt.legend()
 fig.tight_layout()
@@ -161,14 +184,30 @@ for ancestry in range(0,len(Genomewide_Ancestries)):
     BAR_ID = [x + barWidth_Add for x in range(0,len(Sorted_IDs_Y))]
     
     
-    plt.bar(BAR_ID, BAR, bottom = bottom_y,  color = Colours_to_ancestries[Genomewide_Ancestries[ancestry]], width = barWidth, linewidth = edge_linewidth, edgecolor ='black', label = F'Ancestry_{ancestry}', transform= rot + base)
+    plt.bar(BAR_ID, BAR, bottom = bottom_y,  color = Colours_to_ancestries[Genomewide_Ancestries[ancestry]], width = barWidth, linewidth = edge_linewidth, edgecolor ='black', label = F'Ancestry_{ancestry}')
     bottom_y = np.add(bottom_y, BAR)
     
     #barWidth_Add += barWidth
-    
+
+#### Generate (X,Y) labels for the ticks
+y_tick_labels = []
+for hap_id in Sorted_IDs_Y:
+    ID = hap_id.split("_")[1]
+    for loc in Individual_Location:
+        if loc[0] == ID:
+            # Format coordinates to 1 decimal place to save space
+            y_tick_labels.append(f"({loc[1]:.1f},{loc[2]:.1f})--{loc[0]}")
+            break
+
+#### Apply small, diagonal ticks
+ax.set_xticks(range(len(Sorted_IDs)))
+ax.set_xticklabels(y_tick_labels, rotation = 60, ha = 'right', fontsize = 1.5)
+   
+
+   
 plt.title(F'Percentage of Ancestry per Individual\nSorted by position on the Y axis',fontweight ='bold', fontsize = 12, pad = 14)
-plt.ylabel('Sampled Genomes \nSorted by Position on Y-axis', fontweight ='bold', fontsize = 13) 
-plt.xlabel('Ancestry Percentage', fontweight ='bold', fontsize = 13)
+plt.xlabel('Sampled Genomes \nSorted by Position on Y-axis', fontweight ='bold', fontsize = 13) 
+plt.ylabel('Ancestry Percentage', fontweight ='bold', fontsize = 13)
 plt.legend()
 
 fig.tight_layout()

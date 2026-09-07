@@ -1,6 +1,7 @@
 ########### python Python_Scripts/Calculate_Shared_Matching_Ancestry_Composite_Individuals.py ./Simulation_Runs/Simulation_0/Composite_Individuals/Box_Size_10 ./Simulation_Runs/Simulation_0/Composite_Individuals/Diversity_Metrics
 import sys
 import os
+import numpy as np
 from itertools import combinations
 
 

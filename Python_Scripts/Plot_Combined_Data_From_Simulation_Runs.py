@@ -66,7 +66,7 @@ if len(sys.argv) >= 5:
 Individual_Info = []
 Individuals_to_Haplosomes = {}
 Total_Ancestries = []
-
+Simulation_Extinctions = {}
 
 
 for Simulation_Folder in Simulation_Folders:
@@ -120,7 +120,38 @@ for Simulation_Folder in Simulation_Folders:
     Haplosomes_File.close()
 
 
-
+    ### Extinctions Recording
+    Extinction_File_Path = PATH + "Extinction_Recorder.txt"
+    
+    if os.path.exists(Extinction_File_Path):
+        
+        Simulation_Extinctions[SIMULATION_ID] = []
+        Extinction_File = open(Extinction_File_Path, 'r')
+        
+        for LINE in Extinction_File:
+            LINE = LINE.strip()
+            
+            if LINE: ### Ensure the line isn't empty
+                ### Split string "Pop2:2500"
+                POP_STR, GEN_STR = LINE.split(':')
+                
+                ### Extract just the ancestry number
+                ANCESTRY_ID = POP_STR.replace('Pop', '')
+                
+                ### Create dictionary and append to the simulation's list
+                EXTINCTION_DICT = {'Ancestry': ANCESTRY_ID, 'Generation': int(GEN_STR)}
+                
+                Simulation_Extinctions[SIMULATION_ID].append(EXTINCTION_DICT)
+            
+        Extinction_File.close()
+   
+   
+   
+   
+   
+   
+   
+   
    
    
    
@@ -269,7 +300,7 @@ if ( 'POP_INFO' in JSON_data.keys() ):
     
     #### Global K from parameter file
     Global_K = JSON_data['K'][0]
-    
+    Max_Generation = JSON_data['RUNTIME'][0]
     
     #### Space between box and plot edges
     padding = 1
@@ -377,6 +408,31 @@ if ( 'POP_INFO' in JSON_data.keys() ):
 
 
 
+########### Prepare Uniparental Markers, if they exist --> Create Trigger
+Uni_Par_Markers = False
+Uni_Par_Markers_IDs = []
+if ( 'Genome_Architecture_and_Chromosomes' in JSON_data.keys() ):
+    
+    Chromosomes = JSON_data['Genome_Architecture_and_Chromosomes']
+    
+    for Chromo in Chromosomes:
+        
+        for Numb_ID in Chromo.keys(): ### Cycle through chromosomes of this simulation
+            
+            if 'TYPE' in Chromo[Numb_ID]:
+                if (Chromo[Numb_ID]['TYPE'] in [ 'Y', 'W', 'HF', 'FL', 'HM', 'ML']):
+                    Uni_Par_Markers = True
+                    Uni_Par_Markers_IDs.append(Chromo[Numb_ID]['SYMBOL'])
+            
+    
+ 
+    
+    
+    
+    
+    
+    
+
 
 ##############################################################################################################################################################################################################################################################################
 ###### Second Cycle
@@ -393,7 +449,15 @@ Ind_to_Ancestry_Mean_Variance = { x[0]:{ y:0 for y in Total_Ancestries } for x i
 
 Ind_to_Simulation_Origin = { x[0]:x[8] for x in Individual_Info}
 
- 
+if (Uni_Par_Markers) and (Uni_Par_Markers_IDs != []):
+    #### Dictionary of all individuals (across simulations) with each key being a uniparental marker, to be assigned ancestry
+    Ind_to_Uni_Par_Marker_Ancestry = { x[0]:{ y:[] for y in Uni_Par_Markers_IDs } for x in  Individual_Info }
+
+
+
+
+############ Cylce through Simulations
+
 for Simulation_Folder in Simulation_Folders:
     
     PATH = F"./{Folder}/{Simulation_Folder}/"
@@ -464,7 +528,28 @@ for Simulation_Folder in Simulation_Folders:
 
 
 
+    #### if Simulation has uniparental markers
+    if (Uni_Par_Markers) and (Uni_Par_Markers_IDs != []):
+        
+        
+        ### Cycle through the chromosomes that are marker
+        for UP_Marker in Uni_Par_Markers_IDs:
+            
+            
+            UP_Marker_File = open(PATH + F'Ancestries/chromosome_{UP_Marker}.anc', 'r')
+            
+            Header = UP_Marker_File.readline()
+            
+            for LINE in UP_Marker_File:
+                
+                LINE = LINE.strip().split(':')
+                
+                ID = LINE[0].split("_")[1]
+                INDIVIDUAL_ID = F"IND_S{SIMULATION_ID}_{ID}"
+                UPM_ANCESTRY = LINE[1]
+                
 
+                Ind_to_Uni_Par_Marker_Ancestry[INDIVIDUAL_ID][UP_Marker].append(UPM_ANCESTRY)
 
 
 
@@ -775,3 +860,189 @@ fig.supxlabel("Ancestry")
 fig.supylabel("Log Scaled mean variance of lengths\n of ancestry segments")
 plt.tight_layout(rect=[0.01, 0.01, 1.0, 1.0])
 plt.savefig(F"{Output_Folder}/Ancestry_Mean_Variance_of_Lengths_Boxes_of_{Size_of_Box}.pdf", format="pdf")
+
+
+
+
+
+
+
+
+
+
+######################################################################
+#### Do it again, but this time plot Pie Charts of each uniparental marker
+if (Uni_Par_Markers) and (Uni_Par_Markers_IDs != []):
+
+    # Dynamic figure sizing based on grid dimensions
+    fig = plt.figure(figsize=(N_X_Boxes * 2.8, N_Y_Boxes * 2.8))
+    fig.suptitle('Ancestry Distribution of Uniparental Markers per 2D Box', fontsize=14, fontweight='bold')
+
+    # Outer GridSpec for the spatial boxes
+    outer_gs = fig.add_gridspec(N_Y_Boxes, N_X_Boxes, wspace=0.35, hspace=0.35)
+
+    counter = 0
+    for X_axis in range(0, N_X_Boxes):
+
+        for Y_axis in range(N_Y_Boxes-1, -1, -1): ### Reverse Y to match Cartesian layout
+
+            # Outer box subplot to create a prominent frame around the entire spatial box
+            ax_box = fig.add_subplot(outer_gs[Y_axis, X_axis])
+            ax_box.set_xticks([])
+            ax_box.set_yticks([])
+            for spine in ax_box.spines.values():
+                spine.set_linewidth(2.0)
+                spine.set_color('black')
+
+            # Inner GridSpec to stack marker pie charts vertically within this box
+            inner_gs = outer_gs[Y_axis, X_axis].subgridspec(len(Uni_Par_Markers_IDs), 1, hspace=0.2)
+
+            for m_idx, UP_Marker in enumerate(Uni_Par_Markers_IDs):
+
+                ax = fig.add_subplot(inner_gs[m_idx, 0])
+
+                ANCESTRY_COUNTS = { str(A): 0 for A in Total_Ancestries if str(A) != '' }
+
+                #### Collect ancestry counts for this box and marker
+                for IND in Boxes_to_Inds[counter]:
+
+                    if IND in Ind_to_Uni_Par_Marker_Ancestry.keys():
+
+                        if UP_Marker in Ind_to_Uni_Par_Marker_Ancestry[IND].keys():
+
+                            for ANC in Ind_to_Uni_Par_Marker_Ancestry[IND][UP_Marker]:
+
+                                ANC = str(ANC).strip()
+
+                                ### Ignore empty ancestries
+                                if (ANC != '') and (ANC != 'None') and (ANC in ANCESTRY_COUNTS.keys()):
+                                    ANCESTRY_COUNTS[ANC] += 1
+
+                #### Filter zero counts and gather slice colors
+                SIZES = []
+                COLORS = []
+
+                for ANC in sorted(ANCESTRY_COUNTS.keys()):
+                    if ANCESTRY_COUNTS[ANC] > 0:
+                        SIZES.append(ANCESTRY_COUNTS[ANC])
+                        if ANC in Colours_to_ancestries.keys():
+                            COLORS.append(Colours_to_ancestries[ANC])
+
+                #### Render Pie Chart
+                if sum(SIZES) > 0:
+                    ax.pie(SIZES, colors=COLORS, startangle=90)
+                    # Place marker label to the left of the pie chart
+                    ax.text(-1.4, 0, UP_Marker, va='center', ha='right', fontsize=8, fontweight='bold')
+                else:
+                    # Place label even if box has no data
+                    ax.text(0, 0, F"{UP_Marker} (No Data)", va='center', ha='center', fontsize=6, color='gray')
+
+                ax.set_xlim(-1.8, 1.2)
+                
+                # Inner border framing around each individual marker subplot
+                ax.set_xticks([])
+                ax.set_yticks([])
+                for spine in ax.spines.values():
+                    spine.set_linewidth(0.8)
+                    spine.set_color('gray')
+                    spine.set_linestyle('--')
+
+            ### next box
+            counter += 1
+
+    fig.supxlabel("Grid X Coordinates", fontweight='bold')
+    fig.supylabel("Grid Y Coordinates", fontweight='bold')
+    plt.tight_layout(rect=[0.01, 0.01, 1.0, 0.95])
+    plt.savefig(F"{Output_Folder}/Uniparental_Markers_Pie_Charts_Boxes_of_{Size_of_Box}.pdf", format="pdf")
+    plt.close()
+    
+    
+    
+###################################
+#### Plot Extinction Timeline
+
+if len(Simulation_Extinctions) > 0:
+    print("Creating plot for Extinction Timeline")
+    ##### Gather all extinctions
+    all_extinctions = []
+    for sim_id, ext_data in Simulation_Extinctions.items():
+        ###### Handle both dictionaries (current script behavior) and lists (if fixed to track multiple extinctions per sim)
+        all_extinctions.extend(ext_data)
+        ### print(ext_data)
+            
+    ####### Sort chronologically
+    all_extinctions.sort(key = lambda x: x['Generation'])
+    
+    #### setup
+    fig, ax = plt.subplots(figsize = (12, 5))
+    
+    # Draw the main timeline baseline
+    ax.hlines(0, 0, Max_Generation, color= 'black', linewidth = 2, zorder = 1)
+    
+    ###### Collision threshold: stack dots that are within 2% of the timeline's total length
+    x_threshold = Max_Generation * 0.02 
+    plotted_points = []
+    added_to_legend = set()
+    
+    for ext in all_extinctions:
+        gen = ext['Generation']
+        anc = str(ext['Ancestry'])
+        
+        #### Find an open y-level to stack dots if they are too close in time
+        y_level = 1
+        while True:
+            collision = False
+            for px, py in plotted_points:
+                if py == y_level and abs(px - gen) < x_threshold:
+                    collision = True
+                    break
+            if collision:
+                y_level += 1
+            else:
+                break
+                
+        plotted_points.append((gen, y_level))
+        
+        # Determine consistent color
+        dot_color = Colours_to_ancestries.get(anc, 'grey')
+        
+        # Add to legend only once per ancestry
+        label = f"Ancestry {anc}" if anc not in added_to_legend else ""
+        
+        # Plot the point
+        ax.scatter(gen, y_level, color=dot_color, s=120, zorder=3, label=label, edgecolors='black', linewidth=1.5)
+        
+        # Draw a vertical dashed stem connecting the dot to the timeline
+        ax.vlines(gen, 0, y_level, color='grey', linestyle='--', linewidth=1, zorder=2)
+        
+        if label:
+            added_to_legend.add(anc)
+            
+    # 4. Clean up formatting
+    # Set limits
+    ax.set_xlim(- (Max_Generation * 0.05), Max_Generation + (Max_Generation * 0.05))
+    ax.set_ylim(0, max([p[1] for p in plotted_points]) + 1.5)
+    
+    # Hide the Y-axis entirely, keep the X-axis for generations
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['bottom'].set_linewidth(2)
+    ax.get_yaxis().set_visible(False)
+    
+    ax.set_xlabel("Generation", fontweight='bold', fontsize=12)
+    ax.set_title("Timeline of Population Extinctions Across All Simulations", fontweight='bold', fontsize=14)
+    
+    if added_to_legend:
+        # Sort legend labels alphanumerically
+        handles, labels = ax.get_legend_handles_labels()
+        sorted_handles_labels = sorted(zip(handles, labels), key=lambda t: t[1])
+        handles2, labels2 = zip(*sorted_handles_labels)
+        ax.legend(handles2, labels2, loc='upper right', bbox_to_anchor=(1.15, 1.1))
+        
+    plt.tight_layout()
+    plt.savefig(f"{Output_Folder}/Extinctions_Timeline.pdf", format="pdf")
+    plt.close()
+    
+else:
+    print("No extinctions recorded. Skipping Extinction Timeline plot.")
