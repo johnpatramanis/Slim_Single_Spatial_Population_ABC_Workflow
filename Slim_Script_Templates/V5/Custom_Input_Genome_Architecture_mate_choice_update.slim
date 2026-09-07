@@ -262,7 +262,7 @@ initialize() {
 			Denisty_list = c();
 		    Release_list = c();
 		    Kill_List = c();
-		
+			Extinct_List = c();
 		
 			
 			//// Loop to go through every population 
@@ -293,7 +293,7 @@ initialize() {
 				Denisty_list = c(Denisty_list, POP_K);
 				Release_list = c(Release_list, POP_REMVBND);
 				Kill_List = c(Kill_List, POP_KILL);
-				
+				Extinct_List = c(Extinct_List, 0);
 				
 				
 				
@@ -320,7 +320,7 @@ initialize() {
 	///// Default set up
 	if (DEFAULT_MODEL){ /// Only runs if the above Custom model loop did not go through fully
 		
-		
+		defineConstant("NUMBER_OF_POPS", 2);
 		/// Set up pop1
 		sim.addSubpop("p1", asInteger(500));  ////// add Initial population 
 		p1.setSpatialBounds(c(POP_1_WIDTH_MIN, POP_1_HEIGHT_MIN, POP_1_WIDTH_MAX, POP_1_HEIGHT_MAX));   /////// Add spatial bounds for population 1
@@ -337,7 +337,7 @@ initialize() {
 		Denisty_list = c(1.0,1.0);
 		Release_list = c(1,0);
 		Kill_List = c(0,1);
-	
+		Extinct_List = c(0,0);
 	
 	}
 
@@ -352,6 +352,8 @@ initialize() {
 	defineConstant("DENSITY_MULT_LIST", Denisty_list);
 	defineConstant("RELEASE_LIST", Release_list);
 	defineConstant("KILL_LIST", Kill_List);
+	defineGlobal("EXTINCT_LIST", Extinct_List);
+	
 	
 	////// Record
 	//////
@@ -604,6 +606,18 @@ late() {
 		sim.outputFull(OUTDIR + "Spatial_Simulations_SLim.output_full");
 		sim.simulationFinished();
 		
+	}
+	
+	for (POP in sim.subpopulations, IsExtinct in EXTINCT_LIST, COUNTER in 1:length(EXTINCT_LIST) ){ ///// Check for population exctinctions
+		if ( (POP.individualCount == 0) & (IsExtinct != 1) ) {
+			
+			print( "Population " + COUNTER + " has just died");
+			New_Extinct_List = EXTINCT_LIST;
+			New_Extinct_List[COUNTER-1] = 1;
+			defineGlobal("EXTINCT_LIST", New_Extinct_List);
+			GEN=sim.cycle;
+			writeFile(OUTDIR + "Extinction_Recorder.txt", "Pop" + COUNTER + ':' + asString(GEN) );
+		}
 	}
 	
 	sim.subpopulations.individuals.tag = 0;  //// Reset hybrid label
