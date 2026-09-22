@@ -1,131 +1,114 @@
 ##### For conda env: conda install conda-forge::msprime conda-forge::gsl conda-forge::tskit conda-forge::pyslim bioconda::snakemake conda-forge::numpy
-
-
 import numpy as np
 import os, shutil
 import os.path
+import json
 
 ###### Check folders existance, create them if not
 
-if (os.path.exists(os.path.join(os.getcwd(),'Plots')) == False):
+if (os.path.exists(os.path.join(os.getcwd(),'./Plots')) == False):
     os.makedirs("Plots")
-
-
 
 if (os.path.exists(os.path.join(os.getcwd(),'Simulation_Runs')) == False):
     os.makedirs("Simulation_Runs")
 
+#### how many simulations
+if os.path.isfile('Input_Parameters.txt'):
 
+    ###### Read which parameters to generate and how many generations
+    Parameters_File = open('Input_Parameters.txt','r')
 
-
-
-###### Read which parameters to generate and how many generations
-Parameters_File = open('Input_Parameters.txt','r')
-
-#### Get Number of Simulations to run (first line)
-Number_of_Simulations = Parameters_File.readline()
-Number_of_Simulations = int(Number_of_Simulations.strip().split()[1])
-
-Parameters={}
-Parameter_Types = []
-for line in Parameters_File:
-    line = line.strip().split()
+    #### Get Number of Simulations to run (first line)
+    Number_of_Simulations = Parameters_File.readline()
+    Number_of_Simulations = int(Number_of_Simulations.strip().split()[1])
+    Simulations = [ "Simulation_" + str(X) for X in range(0, Number_of_Simulations) ]
     
-    #### Get parameter Name, Min Rate, Max Rate
-    Name_of_Par = str(line[0])
     
-    ### if user wants float
-    if '.' in line[1]:
-        Low_End = float(line[1])
-        High_End = float(line[2])
+##### If user wants to use a distribution of parameters, instead of static parameters
+    if os.path.isfile('params.json') == False:
         
-    ### if user wants integers
-    if '.' not in line[1]:
-        Low_End = int(line[1])
-        High_End = int(line[2])
-    
-    ###### Generate Parameter for each of X simulations
-    Parameter_Values = np.random.uniform(low=Low_End, high=High_End, size=Number_of_Simulations)
-    
-    ##### if input parameter is an integer output should be integer
-    if isinstance(Low_End, int):
-        Parameter_Values = [int(X) for X in Parameter_Values]
-    
-    #### Round up parameter based on which one it is
-    if (Name_of_Par == "K") or (Name_of_Par == "GT") :
-        Parameter_Values = [ round(elem, 3) for elem in Parameter_Values ]
+        Parameters = {}
+        Parameter_Types = []
+        for line in Parameters_File:
+            line = line.strip().split()
+            
+            #### Get parameter Name, Min Rate, Max Rate
+            Name_of_Par = str(line[0])
+            
+            ### if user wants float
+            if '.' in line[1]:
+                Low_End = float(line[1])
+                High_End = float(line[2])
+                
+            ### if user wants integers
+            if '.' not in line[1]:
+                Low_End = int(line[1])
+                High_End = int(line[2])
+            
+            ###### Generate Parameter for each of X simulations
+            Parameter_Values = np.random.uniform(low = Low_End, high = High_End, size = Number_of_Simulations)
+            
+            ##### if input parameter is an integer output should be integer
+            if isinstance(Low_End, int):
+                Parameter_Values = [int(X) for X in Parameter_Values]
+            
+            #### Round up parameter based on which one it is
+            if (Name_of_Par == "K") or (Name_of_Par == "GT") :
+                Parameter_Values = [ round(elem, 3) for elem in Parameter_Values ]
+                
+            if (Name_of_Par == "SD") or (Name_of_Par == "SK") :
+                Parameter_Values = [ round(elem, 3) for elem in Parameter_Values ]
+            
+            #### Enter Parameter name and values into the dictionary
+            Parameters[Name_of_Par] = Parameter_Values
+            
+        Parameter_Names = [X for X in Parameters.keys()]
+
+        ####### Combine Parameter Values as input for a simulation
+        Simulation_Input = []
+
+        for N in range(0, Number_of_Simulations):
+            
+            Parameter_Values_For_One_Run = []
+            
+            for Name in Parameter_Names: #### Cycle through parameters
+                Value_Here = str( Parameters[Name][N] ) ## Convert value to string
+                Parameter_Values_For_One_Run.append( Name + '---' + Value_Here ) ### Add parameter name + Value for this simulation
+             
+            Simulation_Input.append(Parameter_Values_For_One_Run)    
+                
+             
+        ########################################################################################
+
+        ######## Box size for downstream analysis
+        Box_Size = 10
         
-    if (Name_of_Par == "SD") or (Name_of_Par == "SK") :
-        Parameter_Values = [ round(elem, 3) for elem in Parameter_Values ]
-    
-    #### Enter Parameter name and values into the dictionary
-    Parameters[Name_of_Par] = Parameter_Values
+        ####### Generate Plot of Input Parameters distribution, should be UNIFORM DISTRIBUTION!
+        import matplotlib
+        from matplotlib import pyplot as plt
 
-
-
-
-Parameter_Names = [X for X in Parameters.keys()]
-
-
-
-
-
-
-####### Combine Parameter Values as input for a simulation
-Simulation_Input = []
-
-for N in range(0,Number_of_Simulations):
-    
-    Parameter_Values_For_One_Run=[]
-    
-    for Name in Parameter_Names: #### Cycle through parameters
-        Value_Here = str( Parameters[Name][N] ) ## Convert value to string
-        Parameter_Values_For_One_Run.append( Name + '---' + Value_Here ) ### Add parameter name + Value for this simulation
-     
-    Simulation_Input.append(Parameter_Values_For_One_Run)    
-        
-Simulations = [ "Simulation_" + str(X) for X in range(0,len(Simulation_Input)) ]     
+        for X,Y in Parameters.items(): #### Cycle through parameters
+            #### plot histogram
+            plt.figure()
+            plt.hist(Y)
+            plt.title(X)
+            plt.savefig(F"Plots/Histogram_Distribution_{X}.pdf")  
 ########################################################################################
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-####### Generate Plot of Input Parameters distribution, should be UNIFORM DISTRIBUTION!
-import matplotlib
-from matplotlib import pyplot as plt
-
-for X,Y in Parameters.items(): #### Cycle through parameters
-    #### plot histogram
-    plt.figure()
-    plt.hist(Y)
-    plt.title(X)
-    plt.savefig(F"Plots/Histogram_Distribution_{X}.pdf")
     
-########################################################################################
-
-
-
-
-
+    #### get box size if provided by user
+    if os.path.isfile('params.json') == True:
+        
+        with open("params.json", "r") as JSON: ### load parameters as json dictionary
+            JSON_data = json.load(JSON)
+            
+        JSON.close() # close file
+        
+        #### If provided by user, get box size
+        if ( 'Box_Size' in JSON_data.keys() ):
+            Box_Size = int(JSON_data['Box_Size'][0])
+        else:
+            Box_Size = 10
+    
 
 
 
@@ -152,6 +135,7 @@ rule all:
         expand('Simulation_Runs/{sample}/Check_Files/Introgression_Lengths_Plotted', sample = Simulations),
         expand('Simulation_Runs/{sample}/Check_Files/Composite_Individuals_Matching_Ancestry_Plotted', sample = Simulations),
         expand('Simulation_Runs/{sample}/Check_Files/Composite_Individuals_Coverage_of_Ancestry_Plotted', sample = Simulations),
+        expand('Plots/MasterPlotDone')
         
 
 
@@ -165,10 +149,10 @@ rule Create_Folder_For_Each_Simulation:
     input:
         "Input_Parameters.txt"
     output:
-        expand('Simulation_Runs/{sample}/params.json',sample=Simulations)
+        expand('Simulation_Runs/{sample}/params.json',sample = Simulations)
     run:
         Counter = 0 ## Used for naming
-        for SM in Simulation_Input: ### For loop to create each folder
+        for SM in Simulations: ### For loop to create each folder
 
             Folder_Name = "Simulation_" + str(Counter)
             
@@ -181,27 +165,52 @@ rule Create_Folder_For_Each_Simulation:
             
             shell(F"""cp Slim_Script.slim Simulation_Runs/{Folder_Name}/Slim_Script.slim;""") ### Add a copy of slim script into folder
             
-            Parameters_Output_File = open(F"""Simulation_Runs/{Folder_Name}/params.json""",'w') ### Open a file to add parameters of the simulation
             
-            Parameters_Output_File.write("{\n") ### Begin json file
-            
-            for PRMT in Simulation_Input[Counter]:
+            ### if user has not provided with a parameters json config file, assume they want to use a distribution for some of the parameters, check which ones they want to edit (any that are not chagned by the config file, wil lresolve to defaults of the slim script file)
+            if os.path.isfile('params.json') == False:
                 
-                PRMT_NAME = PRMT.split('---')[0]
-                PRMT_VALUE = PRMT.split('---')[1]
+                Parameters_Output_File = open(F"Simulation_Runs/{Folder_Name}/params.json",'w') ### Open a file to add parameters of the simulation
                 
-                Parameters_Output_File.write( F"""\t"{PRMT_NAME}":[{PRMT_VALUE}],\n""" ) ### Add each parameter
+                Parameters_Output_File.write("{\n") ### Begin json file
+                
+                for PRMT in Simulation_Input[Counter]:
+                    
+                    PRMT_NAME = PRMT.split('---')[0]
+                    PRMT_VALUE = PRMT.split('---')[1]
+                    
+                    Parameters_Output_File.write( F"""\t"{PRMT_NAME}":[{PRMT_VALUE}],\n""" ) ### Add each parameter
+                
+                OUTPT_PATH_FOR_SLIM = os.path.join(os.getcwd(),F'Simulation_Runs/{Folder_Name}/')
+                Parameters_Output_File.write( F"""\t"OUTDIR":["{OUTPT_PATH_FOR_SLIM}"]\n""" ) ### Add output folder, full path
+                
+                Parameters_Output_File.write("}") ### End json file
+                Parameters_Output_File.close() ### Close File, for python's sake
             
-            OUTPT_PATH_FOR_SLIM = os.path.join(os.getcwd(),F'Simulation_Runs/{Folder_Name}/')
-            Parameters_Output_File.write( F"""\t"OUTDIR":["{OUTPT_PATH_FOR_SLIM}"]\n""" ) ### Add output folder, full path
             
-            Parameters_Output_File.write("}") ### End json file
-            Parameters_Output_File.close() ### Close File, for python's sake
-            
-            
-            
+            ### if user has provided with a parameters json config file, use that for every simulation
+            if os.path.isfile('params.json') == True:
+                
+                #### Change Output folder to be local
+                OUTPT_PATH_FOR_SLIM = os.path.join(os.getcwd(),F'Simulation_Runs/{Folder_Name}/')
+                
+                shell(F"cp params.json Simulation_Runs/{Folder_Name}/params.json;") ### Add a copy of the params json file into folder
+                
+                with open(F"Simulation_Runs/{Folder_Name}/params.json", "r") as JSON: ### load parameters as json dictionary
+                    JSON_data = json.load(JSON)
+                    
+                JSON.close() # close file
+                JSON_data["OUTDIR"] = OUTPT_PATH_FOR_SLIM ## replace or add outdir with new location
+                JSON_data_str = json.dumps(JSON_data, indent = 4) ## convert to string
+                with open(F"Simulation_Runs/{Folder_Name}/params.json", "w") as JSON: ##Replace parameters file
+                    JSON.write(JSON_data_str)
+                
+                
             Counter+=1
-
+            
+            ### if user has provided a demography for the msprime simulations, add in the folder and downstream python script will utilise it
+            if os.path.isfile("Demography.yaml") == True:
+                
+                shell(F"cp Demography.yaml Simulation_Runs/{Folder_Name}/Demography.yaml;") ### Add a copy of the demography yaml file into folder
 
 
 
@@ -214,8 +223,6 @@ rule Run_Slim_Simulations:
         'Simulation_Runs/{sample}/sim_log.txt'
     run:
         shell(F"cd Simulation_Runs/{wildcards.sample}/; slim Slim_Script.slim; cd ../..;")
-
-
 
 def Which_Simulations_Have_Not_Failed():
     Simulation_Files = []
@@ -239,7 +246,32 @@ rule Assign_Population_Ancestry:
     run:
         ###### If Simulation didn't crash because of population collapse
         if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/Slim_Simulation_Failed_To_Finish")) == False):
-            shell(F"python3 ./Python_Scripts/Find_Admixture_and_Assign_Trees_to_Pop.py ./Simulation_Runs/{wildcards.sample}/") ### Python script to generate ancestry files
+            
+            #### how many individuals to sample at last gen
+            Sample_Number = 50
+            
+            ##### Check if user has given a nubmer to overwrite this
+            #### load parameters file
+            with open(F"./Simulation_Runs/{wildcards.sample}/params.json", "r") as JSON:
+                JSON_data = json.load(JSON)
+            JSON.close() # close file
+            
+            
+            #### check if user has specified this parameter, overwrite if so
+            if "NUMBER_OF_SAMPLES" in JSON_data.keys():
+                Sample_Number = int(JSON_data["NUMBER_OF_SAMPLES"][0])
+            
+            
+            #### check to see if folder is a folder or just one tree sequence / chromosome
+            path_to_tree_sequences = F"Simulation_Runs/{wildcards.sample}/Spatial_Simulations_SLim.trees"
+            if os.path.isdir(path_to_tree_sequences) == False:
+                shell(F"mv Simulation_Runs/{wildcards.sample}/Spatial_Simulations_SLim.trees Simulation_Runs/{wildcards.sample}/chromosome_1.trees;")
+                os.makedirs(F"Simulation_Runs/{wildcards.sample}/Spatial_Simulations_SLim.trees")
+                shell(F"mv Simulation_Runs/{wildcards.sample}/chromosome_1.trees  Simulation_Runs/{wildcards.sample}/Spatial_Simulations_SLim.trees/chromosome_1.trees;")
+            
+            shell(F"python3 ./Python_Scripts/Find_Admixture_and_Assign_Trees_to_Pop.py ./Simulation_Runs/{wildcards.sample}/ {Sample_Number}") ### Python script to generate ancestry files
+            
+            
         ###### if it did
         if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/Slim_Simulation_Failed_To_Finish")) == True):
             shell(F'''printf "Tree_Intervals:0,968638.0,1000000.0\n" > Simulation_Runs/{wildcards.sample}/chromosome_W.anc''')
@@ -254,6 +286,9 @@ rule Assign_Population_Ancestry:
             shutil.rmtree(F"Simulation_Runs/{wildcards.sample}/Ancestries")
             
         os.makedirs(F"Simulation_Runs/{wildcards.sample}/Ancestries") ### Create folder for simulation
+        
+        
+        
         
         shell(F"mv Simulation_Runs/{wildcards.sample}/*.anc Simulation_Runs/{wildcards.sample}/Ancestries/")
       
@@ -443,9 +478,7 @@ rule Plot_Matching_Regional_Ancestry:
         if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/Slim_Simulation_Failed_To_Finish")) == False):
             
             #### Python script to plot average overlap of an ancestry between all pairs of groups, sorted by the X axis
-            shell(F"python3 ./Python_Scripts/Plot_Histogram_Matching_Haplotypes_Regions.py ./Simulation_Runs/{wildcards.sample}/Diversity_Metrics ./Simulation_Runs/{wildcards.sample}/Ancestry_Plots 5")
-            shell(F"python3 ./Python_Scripts/Plot_Histogram_Matching_Haplotypes_Regions.py ./Simulation_Runs/{wildcards.sample}/Diversity_Metrics ./Simulation_Runs/{wildcards.sample}/Ancestry_Plots 10")
-            shell(F"python3 ./Python_Scripts/Plot_Histogram_Matching_Haplotypes_Regions.py ./Simulation_Runs/{wildcards.sample}/Diversity_Metrics ./Simulation_Runs/{wildcards.sample}/Ancestry_Plots 20")
+            shell(F"python3 ./Python_Scripts/Plot_Histogram_Matching_Haplotypes_Regions.py ./Simulation_Runs/{wildcards.sample}/Diversity_Metrics ./Simulation_Runs/{wildcards.sample}/Ancestry_Plots {Box_Size}")
 
         #### Checkfile
         shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Matching_Regional_Ancestry_Plotted")
@@ -508,7 +541,7 @@ rule Create_Composite_Individuals:
         if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/Slim_Simulation_Failed_To_Finish")) == False):
             
             #### Python script to create one composite individual, containing the maximum ancestry coverage from a group of individuals (grouped togather based on space). Creates 1 composite individual from each ancestry and per box of defined size
-            shell(F"python3 ./Python_Scripts/Create_Composite_Individuals_of_an_Ancestry.py ./Simulation_Runs/{wildcards.sample}/Ancestries ./Simulation_Runs/{wildcards.sample}/Composite_Individuals 10 ")
+            shell(F"python3 ./Python_Scripts/Create_Composite_Individuals_of_an_Ancestry.py ./Simulation_Runs/{wildcards.sample}/Ancestries ./Simulation_Runs/{wildcards.sample}/Composite_Individuals {Box_Size}")
 
         #### Checkfile
         shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Composite_Individuals_Created")
@@ -530,7 +563,7 @@ rule Calculate_Matching_Ancestry_Composite_Individuals:
         if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/Slim_Simulation_Failed_To_Finish")) == False):
             
             #### Python script to calculate how much matching overlap is between every pair of composite genomes, for a specific ancestry
-            shell(F"python3 ./Python_Scripts/Calculate_Shared_Matching_Ancestry_Composite_Individuals.py ./Simulation_Runs/{wildcards.sample}/Composite_Individuals/Box_Size_10 ./Simulation_Runs/{wildcards.sample}/Composite_Individuals/Diversity_Metrics ")
+            shell(F"python3 ./Python_Scripts/Calculate_Shared_Matching_Ancestry_Composite_Individuals.py ./Simulation_Runs/{wildcards.sample}/Composite_Individuals/Box_Size_{Box_Size} ./Simulation_Runs/{wildcards.sample}/Composite_Individuals/Diversity_Metrics ")
 
         #### Checkfile
         shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Composite_Individuals_Matching_Ancestry_Calculated")
@@ -551,7 +584,7 @@ rule Plot_Matching_Ancestry_Composite_Individuals:
         if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/Slim_Simulation_Failed_To_Finish")) == False):
             
             #### Python script to plot results of how much matching is between the composite genomes of the same ancestry
-            shell(F"python3 ./Python_Scripts/Plot_Histogram_Matching_Haplotypes_Composite_Individuals.py ./Simulation_Runs/{wildcards.sample}/Composite_Individuals/Diversity_Metrics ./Simulation_Runs/{wildcards.sample}/Ancestry_Plots ")
+            shell(F"python3 ./Python_Scripts/Plot_Histogram_Matching_Haplotypes_Composite_Individuals.py ./Simulation_Runs/{wildcards.sample}/Composite_Individuals/Diversity_Metrics ./Simulation_Runs/{wildcards.sample}/Ancestry_Plots {Box_Size}")
 
         #### Checkfile
         shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Composite_Individuals_Matching_Ancestry_Plotted")
@@ -574,7 +607,23 @@ rule Plot_Coverage_of_Ancestry_Composite_Individuals:
         if (os.path.exists(os.path.join(os.getcwd(),F"Simulation_Runs/{wildcards.sample}/Slim_Simulation_Failed_To_Finish")) == False):
             
             #### Python script to generate a plot. A spatial distribution of the completeness of coverage of a composite genome of a specific ancestry 
-            shell(F"python3 ./Python_Scripts/Plot_Composite_Ancestry_Spatial_Distribution.py ./Simulation_Runs/{wildcards.sample}/Composite_Individuals/Box_Size_10 ./Simulation_Runs/{wildcards.sample}/Ancestry_Plots ")
+            shell(F"python3 ./Python_Scripts/Plot_Composite_Ancestry_Spatial_Distribution.py ./Simulation_Runs/{wildcards.sample}/Composite_Individuals/Box_Size_{Box_Size} ./Simulation_Runs/{wildcards.sample}/Ancestry_Plots")
 
         #### Checkfile
         shell(F"touch Simulation_Runs/{wildcards.sample}/Check_Files/Composite_Individuals_Coverage_of_Ancestry_Plotted")
+
+
+rule Plot_Final_Master_Plot:
+    input:
+        expand('Simulation_Runs/{sample}/Check_Files/Matching_Ancestry_Calculated',sample = Simulations),
+        expand('Simulation_Runs/{sample}/Check_Files/Diversity_and_Ancestry_Plotted',sample = Simulations),
+        expand('Simulation_Runs/{sample}/Check_Files/Long_Tracks_Calculated',sample = Simulations),
+        expand('Simulation_Runs/{sample}/Check_Files/Introgression_Lengths_Calculated',sample = Simulations),
+        expand('Simulation_Runs/{sample}/Check_Files/Composite_Individuals_Matching_Ancestry_Plotted',sample = Simulations),
+        expand('Simulation_Runs/{sample}/Check_Files/Composite_Individuals_Coverage_of_Ancestry_Plotted',sample = Simulations)
+    output:
+        'Plots/MasterPlotDone'
+    run:
+
+        shell(F"python3 Python_Scripts/Plot_Combined_Data_From_Simulation_Runs.py ./Simulation_Runs/ ./Plots {Box_Size}")
+        shell('touch Plots/MasterPlotDone')
