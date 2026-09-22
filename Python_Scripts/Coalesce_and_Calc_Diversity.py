@@ -7,11 +7,47 @@ import tskit
 import numpy as np
 import os
 import sys
+import json
 from itertools import combinations
 
 
 
 Folder = sys.argv[1]
+
+
+#####
+Parameters_File = Folder + "params.json"
+
+
+with open(Parameters_File, "r") as JSON: ### load parameters as json dictionary
+    JSON_data = json.load(JSON)
+    
+JSON.close() # close file
+
+
+#### Check if user has provided a mutation rate for Coalescence simulations
+if ( 'MU' in JSON_data.keys() ):
+    mutation_rate = float(JSON_data["MU"][0])
+    
+    if mutation_rate == 0:
+        mutation_rate = 1e-8
+else:
+    mutation_rate = 1e-8
+
+
+
+#### Check if user has provided a recombination rate for Coalescence simulations
+if ( 'ReRa' in JSON_data.keys() ):
+    rec_rate = float(JSON_data["ReRa"][0])
+    
+    if rec_rate == 0:
+        rec_rate = 1e-8
+else:
+    rec_rate = 1e-8
+
+
+
+
 
 #### Load ID of individuals that have already been sampled for other analyses
 Individuals_Info = {}
@@ -83,14 +119,14 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
             Demography.add_population_parameters_change(time = (18000 + Start_of_SLiM_time) , initial_size = 10000, population = 'pop_0')
             
             ### use Demography for Recapitation
-            rts = pyslim.recapitate(ts, demography = Demography, recombination_rate = 1e-8 )
+            rts = pyslim.recapitate(ts, demography = Demography, recombination_rate = rec_rate )
         
         
         
         ### If more or less than 3 
         if ts.num_populations != 3:
             ### Recapitate each tree, to coalesce fully all lineages
-            rts = pyslim.recapitate(ts, recombination_rate=1e-8, ancestral_Ne = 10000)   ##### Use custome Recombination map (both for Slim and Tskit), see here https://tskit.dev/pyslim/docs/stable/tutorial.html
+            rts = pyslim.recapitate(ts, recombination_rate = rec_rate, ancestral_Ne = 10000)   ##### Use custome Recombination map (both for Slim and Tskit), see here https://tskit.dev/pyslim/docs/stable/tutorial.html
         
     
     
@@ -104,9 +140,9 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
         Demes_ography = msprime.Demography.from_demes(graph)
         
         if (Demes_ography.num_populations == ts.num_populations): ### Basic check that provided demography can be joined with Slim demogrphy
-            rts = pyslim.recapitate(ts, demography = Demes_ography, recombination_rate = 1e-8)
+            rts = pyslim.recapitate(ts, demography = Demes_ography, recombination_rate = rec_rate)
         else: ### If not, use a generic coalescence model for all populations
-            rts = pyslim.recapitate(ts, recombination_rate=1e-8, ancestral_Ne = 10000)   ##### Use custome Recombination map (both for Slim and Tskit), see here https://tskit.dev/pyslim/docs/stable/tutorial.html
+            rts = pyslim.recapitate(ts, recombination_rate = rec_rate, ancestral_Ne = 10000)   ##### Use custome Recombination map (both for Slim and Tskit), see here https://tskit.dev/pyslim/docs/stable/tutorial.html
     
     
     
@@ -117,7 +153,7 @@ for tree_file in os.listdir(F"{Folder}/Spatial_Simulations_SLim.trees/"): ### Fi
     
     ### Add neutral mutations to simplified tree
     next_id = pyslim.next_slim_mutation_id(rts)
-    nts = msprime.sim_mutations(rts, rate = 1e-8, model = msprime.SLiMMutationModel(type = 0, next_id = next_id),keep = True,)  ### keep = True keeps any preexisting mutations from slim
+    nts = msprime.sim_mutations(rts, rate = mutation_rate, model = msprime.SLiMMutationModel(type = 0, next_id = next_id), keep = True,)  ### keep = True keeps any preexisting mutations from slim
     ### print(f"The tree sequence now has {nts.num_mutations} mutations,\n"f"and mean pairwise nucleotide diversity is {nts.diversity():0.3e}.")
     
     ### Create  VCF output
